@@ -1,0 +1,231 @@
+/* Enhanced Media Text Block - Frontend Styles */
+
+.wp-block-custom-enhanced-media-text {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    /* gap: 2rem; */
+    gap: 0px;
+    align-items: center;
+    margin: 1.5rem 0;
+}
+
+.wp-block-custom-enhanced-media-text.has-media-on-the-right {
+    grid-template-columns: 1.3fr 1fr;
+}
+
+.wp-block-custom-enhanced-media-text.has-media-on-the-left {
+    grid-template-columns: 1fr 1.3fr;
+}
+
+.wp-block-custom-enhanced-media-text.has-media-on-the-right .wp-block-custom-enhanced-media-text__content {
+    order: 1;
+}
+
+.wp-block-custom-enhanced-media-text.has-media-on-the-right .wp-block-custom-enhanced-media-text__media {
+    order: 2;
+}
+
+/* Vertical Alignment */
+.wp-block-custom-enhanced-media-text.is-vertically-aligned-top {
+    align-items: flex-start;
+}
+
+.wp-block-custom-enhanced-media-text.is-vertically-aligned-center {
+    align-items: center;
+}
+
+.wp-block-custom-enhanced-media-text.is-vertically-aligned-bottom {
+    align-items: flex-end;
+}
+
+/* Media Section */
+.wp-block-custom-enhanced-media-text__media {
+    position: relative;
+}
+
+.wp-block-custom-enhanced-media-text__media img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 8px;
+}
+
+/* Content Section */
+.wp-block-custom-enhanced-media-text__content {
+    position: relative;
+    padding: 1rem;
+    display: flex;
+    flex-wrap: no-wrap;
+    flex-direction: row;
+}
+
+.wp-block-custom-enhanced-media-text__text {
+    position: relative;
+    z-index: 1;
+}
+
+/* Third Image Positioning */
+.wp-block-custom-enhanced-media-text__third-image {
+    /* position: absolute;
+    z-index: 2;
+    width: 80px;
+    height: 80px; */
+    position: relative;
+    z-index:2;
+}
+
+.wp-block-custom-enhanced-media-text__third-image img {
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    /* width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); */
+}
+
+/* Third Image Position Variations */
+.wp-block-custom-enhanced-media-text.third-image-top .wp-block-custom-enhanced-media-text__third-image {
+    /* top: -10px;
+    right: -10px; */
+    top: -15vh;
+    right: 0px;
+    order: 1;
+}
+
+.wp-block-custom-enhanced-media-text.third-image-middle .wp-block-custom-enhanced-media-text__third-image {
+    top: 50%;
+    right: -10px;
+    transform: translateY(-50%);
+}
+
+.wp-block-custom-enhanced-media-text.third-image-bottom .wp-block-custom-enhanced-media-text__third-image {
+    bottom: -10px;
+    right: -10px;
+}
+
+/* When media is on the right, adjust third image positioning */
+.wp-block-custom-enhanced-media-text.has-media-on-the-right.third-image-top .wp-block-custom-enhanced-media-text__third-image {
+    top: -10px;
+    left: -10px;
+    right: auto;
+}
+
+.wp-block-custom-enhanced-media-text.has-media-on-the-right.third-image-middle .wp-block-custom-enhanced-media-text__third-image {
+    top: 50%;
+    left: -10px;
+    right: auto;
+    transform: translateY(-50%);
+}
+
+.wp-block-custom-enhanced-media-text.has-media-on-the-right.third-image-bottom .wp-block-custom-enhanced-media-text__third-image {
+    bottom: -10px;
+    left: -10px;
+    right: auto;
+}
+
+/* Typography and spacing for content */
+.wp-block-custom-enhanced-media-text__text > * {
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+.wp-block-custom-enhanced-media-text__text > *:last-child {
+    margin-bottom: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 781px) {
+    .wp-block-custom-enhanced-media-text {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .wp-block-custom-enhanced-media-text.has-media-on-the-right .wp-block-custom-enhanced-media-text__content,
+    .wp-block-custom-enhanced-media-text.has-media-on-the-right .wp-block-custom-enhanced-media-text__media {
+        order: unset;
+    }
+    
+    .wp-block-custom-enhanced-media-text__content {
+        padding: 0.5rem;
+    }
+    
+    /* Mobile third image positioning */
+    .wp-block-custom-enhanced-media-text__third-image {
+        position: relative;
+        width: 60px;
+        height: 60px;
+        margin: 1rem auto;
+        top: auto;
+        right: auto;
+        bottom: auto;
+        left: auto;
+        transform: none;
+    }
+    
+    /* Mobile third image placement based on position */
+    .wp-block-custom-enhanced-media-text.third-image-top .wp-block-custom-enhanced-media-text__content {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .wp-block-custom-enhanced-media-text.third-image-top .wp-block-custom-enhanced-media-text__third-image {
+        order: -1;
+        align-self: flex-end;
+        margin: 0 0 1rem 0;
+    }
+    
+    .wp-block-custom-enhanced-media-text.third-image-bottom .wp-block-custom-enhanced-media-text__content {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .wp-block-custom-enhanced-media-text.third-image-bottom .wp-block-custom-enhanced-media-text__third-image {
+        order: 1;
+        align-self: flex-end;
+        margin: 1rem 0 0 0;
+    }
+    
+    .wp-block-custom-enhanced-media-text.third-image-middle .wp-block-custom-enhanced-media-text__third-image {
+        align-self: center;
+        margin: 1rem auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .wp-block-custom-enhanced-media-text {
+        gap: 1rem;
+    }
+    
+    .wp-block-custom-enhanced-media-text__third-image {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .wp-block-custom-enhanced-media-text__content {
+        padding: 0;
+    }
+}
+
+/* Additional styling for buttons and other inner blocks */
+.wp-block-custom-enhanced-media-text__text .wp-block-button {
+    margin-top: 1.5rem;
+}
+
+.wp-block-custom-enhanced-media-text__text .wp-block-buttons {
+    margin-top: 1.5rem;
+}
+
+/* Focus and hover states for accessibility */
+.wp-block-custom-enhanced-media-text__third-image:focus-within {
+    outline: 2px solid #007cba;
+    outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+    .wp-block-custom-enhanced-media-text {
+        break-inside: avoid;
+    }
+}

@@ -1,0 +1,66 @@
+/* Art Emotions Block Editor Styles */
+.art-emotions-grid-preview {
+    display: grid;
+    grid-template-columns: repeat(var(--columns, 3), 1fr);
+    gap: 15px;
+    margin: 15px 0;
+    padding: 15px;
+    border: 1px dashed #ddd;
+    border-radius: 4px;
+    background: #f9f9f9;
+}
+
+.art-emotion-item-preview {
+    position: relative;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+    background: white;
+    min-height: 120px;
+}
+
+.art-emotion-image-preview {
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.art-emotion-image-preview .has-image {
+    font-size: 2rem;
+}
+
+.art-emotion-overlay-preview {
+    padding: 8px;
+    background: white;
+    border-top: 1px solid #eee;
+}
+
+.art-emotion-overlay-preview h3 {
+    margin: 0 0 4px 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.art-emotion-overlay-preview .count {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+/* Editor responsive preview */
+@media (max-width: 600px) {
+    .art-emotions-grid-preview {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 400px) {
+    .art-emotions-grid-preview {
+        grid-template-columns: 1fr;
+    }
+}

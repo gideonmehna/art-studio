@@ -1,0 +1,321 @@
+/* Creative Art Emotions Block Styles */
+
+.creative-art-emotions-container {
+    position: relative;
+    width: 100%;
+    min-height: 500px;
+    padding: 2rem;
+    overflow: hidden;
+    background: transparent;
+}
+
+/* Base Creative Emotion Item */
+.creative-emotion-item {
+    position: absolute;
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: translateY(30px) scale(0.8);
+    animation: fadeInUp 0.8s ease forwards;
+    cursor: pointer;
+}
+
+.creative-emotion-item:hover {
+    transform: translateY(-10px) scale(1.05);
+    z-index: 10;
+}
+
+/* Animation keyframes */
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.creative-emotion-item:hover {
+    animation: pulse 0.6s ease-in-out;
+}
+
+/* Size Variations */
+.creative-emotion-small {
+    width: 120px;
+    height: 120px;
+}
+
+.creative-emotion-medium {
+    width: 160px;
+    height: 160px;
+}
+
+.creative-emotion-large {
+    width: 200px;
+    height: 200px;
+}
+
+/* Desktop Positions (1200px+) */
+@media (min-width: 1200px) {
+    .creative-art-emotions-container {
+        min-height: 600px;
+    }
+    
+    .creative-emotion-top-left {
+        top: 10%;
+        left: 15%;
+    }
+    
+    .creative-emotion-top-center {
+        top: 5%;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    
+    .creative-emotion-top-right {
+        top: 15%;
+        right: 10%;
+    }
+    
+    .creative-emotion-bottom-left {
+        bottom: 20%;
+        left: 25%;
+    }
+    
+    .creative-emotion-bottom-right {
+        bottom: 15%;
+        right: 20%;
+    }
+    
+    .creative-emotion-center {
+        top: 45%;
+        left: 45%;
+    }
+}
+
+/* Tablet Layout (768px - 1199px) */
+@media (min-width: 768px) and (max-width: 1199px) {
+    .creative-art-emotions-container {
+        min-height: 450px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+        align-items: center;
+        justify-items: center;
+    }
+    
+    .creative-emotion-item {
+        position: relative;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        bottom: auto !important;
+    }
+    
+    .creative-emotion-small {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .creative-emotion-medium {
+        width: 130px;
+        height: 130px;
+    }
+    
+    .creative-emotion-large {
+        width: 150px;
+        height: 150px;
+    }
+    
+    /* Add some creative offset to maintain artistic feel */
+    .creative-emotion-item:nth-child(2n) {
+        transform: translateY(-15px);
+    }
+    
+    .creative-emotion-item:nth-child(3n) {
+        transform: translateY(10px);
+    }
+}
+
+/* Mobile Layout (below 768px) */
+@media (max-width: 767px) {
+    .creative-art-emotions-container {
+        min-height: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        align-items: center;
+        padding: 1rem;
+    }
+    
+    .creative-emotion-item {
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        bottom: auto !important;
+        width: 140px !important;
+        height: 140px !important;
+        transform: none !important;
+    }
+    
+    .creative-emotion-item:hover {
+        transform: scale(1.05) !important;
+    }
+}
+
+/* Creative Emotion Image Styles */
+.creative-emotion-image {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+}
+
+.creative-emotion-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.creative-emotion-item:hover .creative-emotion-image img {
+    transform: scale(1.1);
+}
+
+/* Creative Emotion Caption */
+.creative-emotion-caption {
+    position: absolute;
+    bottom: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 100;
+}
+
+.creative-emotion-item:hover .creative-emotion-caption {
+    opacity: 1;
+    visibility: visible;
+    bottom: -40px;
+}
+
+/* Placeholder Styles */
+.creative-emotion-placeholder {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.creative-emotion-placeholder .emotion-initial {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: white;
+    text-transform: uppercase;
+}
+
+/* Optional Overlay for Count */
+.creative-emotion-overlay {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #333;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.creative-emotion-item:hover .creative-emotion-overlay {
+    opacity: 1;
+}
+
+/* Link Styles */
+.creative-emotion-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.creative-emotion-link:hover {
+    text-decoration: none;
+}
+
+/* Loading Animation Enhancement */
+.creative-art-emotions-container[data-animation="fade-up"] .creative-emotion-item {
+    animation: fadeInUp 0.8s ease forwards;
+}
+
+.creative-art-emotions-container[data-animation="bounce"] .creative-emotion-item {
+    animation: bounceIn 1s ease forwards;
+}
+
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3) translateY(50px);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.1) translateY(-10px);
+    }
+    70% {
+        transform: scale(0.9) translateY(5px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Accessibility and Focus States */
+.creative-emotion-link:focus {
+    outline: 3px solid #4A90E2;
+    outline-offset: 2px;
+    border-radius: 50%;
+}
+
+/* Print Styles */
+@media print {
+    .creative-art-emotions-container {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 1rem !important;
+        position: static !important;
+        min-height: auto !important;
+    }
+    
+    .creative-emotion-item {
+        position: static !important;
+        page-break-inside: avoid;
+    }
+    
+    .creative-emotion-caption {
+        position: static !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        background: #f0f0f0 !important;
+        color: #333 !important;
+        margin-top: 0.5rem !important;
+        text-align: center !important;
+    }
+}

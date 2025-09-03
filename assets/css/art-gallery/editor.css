@@ -1,0 +1,28 @@
+/* Editor-specific styles for the Art Gallery Block */
+.art-gallery-block-editor {
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.art-gallery-block-editor h3 {
+    margin: 0 0 10px 0;
+    color: #1e1e1e;
+    font-size: 18px;
+}
+
+.art-gallery-block-editor p {
+    margin: 5px 0;
+    color: #757575;
+    font-size: 14px;
+}
+
+.art-gallery-block-editor::before {
+    content: "🎨";
+    font-size: 48px;
+    margin-bottom: 10px;
+    opacity: 0.5;
+}

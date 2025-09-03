@@ -1,0 +1,86 @@
+/* css/custom-button-style.css */
+
+.art-studio-custom-button-wrapper {
+    margin: 1rem 0;
+}
+
+.art-studio-custom-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: inherit;
+    border: none;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.art-studio-custom-button:hover {
+    color: inherit;
+    text-decoration: none;
+}
+
+.art-studio-custom-button:hover .art-studio-button-arrow {
+    transform: translateX(4px);
+}
+
+.art-studio-button-text {
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: 400;
+    line-height: inherit;
+    color: inherit;
+}
+
+.art-studio-button-arrow {
+    width: 44px;
+    height: 16px;
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+    color: inherit;
+}
+
+.art-studio-button-arrow path {
+    stroke: currentColor;
+}
+
+/* Editor specific styles */
+.wp-block-art-studio-custom-button .art-studio-custom-button {
+    pointer-events: none;
+    opacity: 0.9;
+}
+
+.wp-block-art-studio-custom-button .art-studio-button-text {
+    min-width: 20px;
+}
+
+.wp-block-art-studio-custom-button .art-studio-button-text:empty:before {
+    content: 'Enter button text...';
+    color: #999;
+    font-style: italic;
+}
+
+/* Focus styles for accessibility */
+.art-studio-custom-button:focus {
+    outline: 2px solid #0073aa;
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .art-studio-button-arrow {
+        width: 28px;
+        height: 14px;
+    }
+}
+
+.art-studio-button-underline {
+    text-decoration: underline;
+}
