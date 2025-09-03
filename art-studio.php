@@ -368,14 +368,10 @@ add_action('pre_get_posts', 'handle_art_piece_admin_filtering');
 function art_studio_activate() {
     register_art_pieces_post_type();
     register_art_emotion_taxonomy();
+    // Initialize custom menu assets
+    art_studio_menu_activate();
     flush_rewrite_rules();
-    // Create default art emotions if none exist
-    // $default_emotions = ['Happy', 'Sad', 'Excited', 'Calm', 'Peaceful', 'Energetic'];
-    // foreach ($default_emotions as $emotion) {
-    //     if (!term_exists($emotion, 'art_emotion')) {
-    //         wp_insert_term($emotion, 'art_emotion');
-    //     }
-    // }
+    
 }
 register_activation_hook(__FILE__, 'art_studio_activate');
 
@@ -786,63 +782,30 @@ function create_artwork_post_from_forminator($form_id, $response, $form_fields =
 
     error_log("Art Studio: Successfully created post with ID - {$post_id}");
 
-    // Set taxonomy terms
+    // Set taxonomy terms and tags
     if (!empty($data['artwork_emotion'])) {
-        $emotion_terms = array();
-        $custom_emotions = array();
+        $tags = array();
         
-        // Process selected emotions
-        foreach ($data['artwork_emotion'] as $emotion) {
-            if ($emotion !== 'custom_option') {
-                $emotion_terms[] = $emotion;
-            }
-        }
-        
-        // Process custom emotions if present
-        if (in_array('custom_option', $data['artwork_emotion']) && !empty($_POST['custom-checkbox-1'])) {
-            // Create "Other Emotions" category if it doesn't exist
-            $other_cat = term_exists('Other Emotions', 'art_emotion');
-            if (!$other_cat) {
-                $other_cat = wp_insert_term('Other Emotions', 'art_emotion', array(
-                    'description' => 'Custom emotions submitted by users'
-                ));
-            }
-            
-            if (!is_wp_error($other_cat)) {
-                $emotion_terms[] = intval($other_cat['term_id']);
-                
-                // Split custom emotions and trim whitespace
-                $custom_emotions = array_map('trim', explode(',', $_POST['custom-checkbox-1']));
-            }
-        }
-        
-        // Set emotion taxonomy terms
-        $term_result = wp_set_object_terms($post_id, $emotion_terms, 'art_emotion');
+        // Set emotion taxonomy terms and add them as tags
+        $term_result = wp_set_object_terms($post_id, $data['artwork_emotion'], 'art_emotion');
         if (is_wp_error($term_result)) {
             error_log("Art Studio: Failed to set emotion terms - " . $term_result->get_error_message());
         }
         
-        // Add all emotions as tags (both taxonomy terms and custom emotions)
-        $tags = array();
-        
         // Add selected taxonomy terms as tags
-        foreach ($emotion_terms as $term) {
-            if (is_numeric($term)) {
-                $term_obj = get_term($term, 'art_emotion');
-                if (!is_wp_error($term_obj)) {
-                    $tags[] = $term_obj->name;
-                }
-            } else {
-                $tags[] = $term;
+        foreach ($data['artwork_emotion'] as $emotion) {
+            $tags[] = $emotion;
+        }
+        
+        // Add additional emotions from text-3 as tags
+        if (!empty($_POST['text-3'])) {
+            $custom_emotions = array_map('trim', explode(',', sanitize_text_field($_POST['text-3'])));
+            if (!empty($custom_emotions)) {
+                $tags = array_merge($tags, $custom_emotions);
             }
         }
         
-        // Add custom emotions as tags
-        if (!empty($custom_emotions)) {
-            $tags = array_merge($tags, $custom_emotions);
-        }
-        
-        // Set tags
+        // Set all tags
         if (!empty($tags)) {
             $tag_result = wp_set_post_tags($post_id, $tags, true);
             if (is_wp_error($tag_result)) {
@@ -958,3 +921,13 @@ require_once ART_STUDIO_PLUGIN_PATH . 'inc/blocks/enhanced-media-text.php';
 
 // Creative Art Emotions Block
 require_once ART_STUDIO_PLUGIN_PATH . 'inc/blocks/creative-art-emotions.php';
+
+// Include custom menu
+require_once ART_STUDIO_PLUGIN_PATH . 'inc/templates/custom-menu.php';
+
+// Initialize custom menu
+function init_art_studio_custom_menu() {
+    global $art_studio_custom_menu;
+    $art_studio_custom_menu = new ArtStudioCustomMenu();
+}
+add_action('plugins_loaded', 'init_art_studio_custom_menu');

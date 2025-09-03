@@ -1,27 +1,19 @@
 <?php
 /**
- * Plugin Name: Art Studio Custom Menu
+ * Art Studio Custom Menu
  * Description: Custom navigation menu with frontend editing capabilities for Art Studio
- * Version: 1.0.0
- * Author: Your Name
+ * 
  */
 
-// Prevent direct access
-if (!defined('ABSPATH')) {
-    exit;
-}
 
-// Define plugin constants
-define('ART_STUDIO_MENU_VERSION', '1.0.0');
-define('ART_STUDIO_MENU_PLUGIN_DIR', plugin_dir_path(__FILE__));
-define('ART_STUDIO_MENU_PLUGIN_URL', plugin_dir_url(__FILE__));
+
 
 class ArtStudioCustomMenu {
     
     public function __construct() {
         add_action('init', array($this, 'init'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
-        add_action('wp_head', array($this, 'add_menu_to_head'));
+        // add_action('wp_head', array($this, 'add_menu_to_head'));
         add_action('wp_ajax_save_menu_items', array($this, 'save_menu_items'));
         add_action('wp_ajax_nopriv_save_menu_items', array($this, 'save_menu_items'));
         add_action('admin_menu', array($this, 'add_admin_menu'));
@@ -46,8 +38,8 @@ class ArtStudioCustomMenu {
     }
     
     public function enqueue_scripts() {
-        wp_enqueue_style('art-studio-menu-style', ART_STUDIO_MENU_PLUGIN_URL . 'assets/css/menu.css', array(), ART_STUDIO_MENU_VERSION);
-        wp_enqueue_script('art-studio-menu-script', ART_STUDIO_MENU_PLUGIN_URL . 'assets/js/menu.js', array('jquery'), ART_STUDIO_MENU_VERSION, true);
+        wp_enqueue_style('art-studio-menu-style', ART_STUDIO_PLUGIN_URL . 'assets/css/menu.css', array(), ART_STUDIO_VERSION);
+        wp_enqueue_script('art-studio-menu-script', ART_STUDIO_PLUGIN_URL . 'assets/js/menu.js', array('jquery'), ART_STUDIO_VERSION, true);
         
         // Localize script for AJAX
         wp_localize_script('art-studio-menu-script', 'artStudioMenu', array(
@@ -57,7 +49,7 @@ class ArtStudioCustomMenu {
         ));
     }
     
-    public function add_menu_to_head() {
+    public function add_menu_to_body() {
         // Add the menu trigger button to head/header area
         echo '<div id="art-studio-menu-container">';
         $this->display_menu();
@@ -299,13 +291,11 @@ class ArtStudioCustomMenu {
 // Initialize the plugin
 new ArtStudioCustomMenu();
 
-// Create plugin folder structure on activation
-register_activation_hook(__FILE__, 'art_studio_menu_activate');
 
 function art_studio_menu_activate() {
     // Create assets directory if it doesn't exist
     $upload_dir = wp_upload_dir();
-    $plugin_dir = ART_STUDIO_MENU_PLUGIN_DIR . 'assets/';
+    $plugin_dir = ART_STUDIO_PLUGIN_PATH . 'assets/';
     
     if (!file_exists($plugin_dir)) {
         wp_mkdir_p($plugin_dir);
