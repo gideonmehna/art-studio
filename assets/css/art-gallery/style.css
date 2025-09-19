@@ -5,29 +5,43 @@
     padding: 20px;
 }
 
+.art-emotion-bar {
+    width: 1.5px;
+    background: black;
+    align-self: stretch; /* Ensures it fills the height of the flex container */
+}
+
 /* Filters */
 .art-gallery-filters {
     display: flex;
-    gap: 20px;
-    margin-bottom: 30px;
+    gap: 10px;
+    /* margin-bottom: 30px; */
     padding: 20px;
-    background: #f8f9fa;
+    /* background: #f8f9fa; */
     border-radius: 8px;
     align-items: center;
+    justify-content: flex-start;
+}
+
+@media (max-width: 768px) {
+    .art-gallery-filters {
+        justify-content: center;
+    }
 }
 
 .filter-group {
     position: relative;
     display: flex;
     align-items: center;
-    gap: 10px;
+    /* gap: 10px; */
+    gap: 0;
 }
 
 .filter-btn {
     background: #fff;
-    border: 2px solid #ddd;
+    border: 1.18px solid #ddd;
     padding: 8px 16px;
-    border-radius: 20px;
+    border-radius: 8px 0 0 8px; /* 20px */
     cursor: pointer;
     font-size: 14px;
     transition: all 0.3s ease;
@@ -35,15 +49,15 @@
 
 .filter-btn.active,
 .filter-btn:hover {
-    background: #ffed4e;
-    border-color: #ffed4e;
+    /* background: #ffed4e; */
+    border-color: #777;
 }
 
 .filter-toggle {
     background: #fff;
-    border: 1px solid #ddd;
+    border: 1.18px solid #777;
     padding: 8px 12px;
-    border-radius: 4px;
+    border-radius: 0 8px 8px 0;
     cursor: pointer;
     font-size: 14px;
     transition: all 0.3s ease;
@@ -130,19 +144,23 @@
     transform: scale(1.1);
 }
 
-.emotion-btn.active .emotion-icon {
-    border-color: #ffed4e;
-    background: #ffed4e;
+.emotion-btn.active .emotion-icon.all-emotions {
+    border-color: black;
+    border: 2px solid black;
+    background: none;
+    color: black;
 }
 
 .emotion-icon {
-    width: 80px;
-    height: 80px;
+    /* 80px */
+    width: 100%;
+    height: auto;
+    min-height: 84px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 3px solid #ddd;
+    /* border: 3px solid #ddd; */
     background: #fff;
     font-size: 14px;
     font-weight: bold;
@@ -160,16 +178,20 @@
 .emotion-icon.all-emotions {
     background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #f9ca24);
     color: white;
+    width: 85px;
+    height: 85px;
+    margin: 0 auto;
 }
 
 /* Art content */
 .art-content {
     flex: 1;
+    width: 100%;
 }
 
 .art-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 20px;
     margin-bottom: 30px;
 }
@@ -182,16 +204,14 @@
     transition: transform 0.3s ease;
 }
 
-.art-item:hover {
+/* .art-item:hover {
     transform: translateY(-5px);
-}
+} */
 
 .art-image {
     width: 100%;
     height: 200px;
-    background: #fff;
-    border-radius: 8px;
-    overflow: hidden;
+    background: transparent;
     margin-bottom: 15px;
     display: flex;
     align-items: center;
@@ -202,6 +222,10 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    border-radius: 10px;
+    transition: transform 0.3s ease;
+    box-shadow: rgba(0, 0, 0, 0.09) 0px 2px 1px, rgba(0, 0, 0, 0.09) 0px 4px 2px, rgba(0, 0, 0, 0.09) 0px 8px 4px, rgba(0, 0, 0, 0.09) 0px 16px 8px, rgba(0, 0, 0, 0.09) 0px 32px 16px;
+
 }
 
 .no-image-placeholder {
@@ -234,16 +258,16 @@
 
 /* Buttons */
 .load-more-container {
-    text-align: center;
+    text-align: left;
     margin: 30px 0;
 }
 
 .load-more-btn {
-    background: #007cba;
-    color: white;
-    border: none;
-    padding: 12px 30px;
-    border-radius: 25px;
+    background: none;
+    color: black;
+    border: 1.7px solid #887;
+    padding: 8px 20px;
+    border-radius: 10px;
     cursor: pointer;
     font-size: 16px;
     transition: all 0.3s ease;
@@ -255,16 +279,16 @@
 }
 
 .upload-container {
-    text-align: center;
+    text-align: left;
     margin: 30px 0;
 }
 
 .upload-btn {
-    background: #28a745;
-    color: white;
-    border: none;
-    padding: 12px 30px;
-    border-radius: 25px;
+    background: none;
+    color: black;
+    border: 1.7px solid #887;
+    padding: 8px 20px;
+    border-radius: 10px;
     cursor: pointer;
     font-size: 16px;
     transition: all 0.3s ease;
@@ -277,10 +301,19 @@
 
 /* Back to top */
 .back-to-top {
-    position: fixed;
+    /* position: fixed;
     bottom: 30px;
     right: 30px;
+    z-index: 1000; */
+    position: relative;
+    /* bottom: 30px; */
+    top: -90px;
+    /* right: 30px; */
+    margin-left: auto;
+    right: 0;
+    display: flex;
     z-index: 1000;
+    flex-direction: row-reverse;
 }
 
 #back-to-top-btn {
@@ -338,11 +371,19 @@
     .art-gallery-container {
         padding: 15px;
     }
+
+    .art-gallery-filters .emotion-sidebar {
+        display: none;
+        width: 0;
+        padding: 0;
+    }
     
     .art-gallery-filters {
-        flex-direction: column;
-        gap: 15px;
+        /* flex-direction: column;
+        gap: 15px; */
         align-items: stretch;
+        flex-direction: row;
+        flex-wrap: wrap;
     }
     
     .filter-group {
@@ -351,6 +392,7 @@
     
     .art-gallery-main {
         flex-direction: column;
+        gap: 0;
     }
     
     /* Mobile emotion categories - horizontal row */
@@ -366,17 +408,19 @@
         gap: 10px;
         overflow-x: auto;
         padding: 10px 0;
+        justify-content: center;
+        flex-wrap: wrap;
     }
     
     .emotion-icon {
-        width: 60px;
+        width: auto;
         height: 60px;
         font-size: 12px;
         flex-shrink: 0;
     }
     
     .art-grid {
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
         gap: 15px;
     }
     
@@ -413,8 +457,11 @@
     }
     
     .filter-group {
-        flex-direction: column;
-        gap: 8px;
+        /* flex-direction: column;
+        gap: 8px; */
+        flex-direction: row;
+        flex-wrap: nowrap;
+        /* gap: 8px; */
     }
     
     .art-grid {
@@ -426,8 +473,10 @@
     }
     
     .emotion-icon {
-        width: 50px;
-        height: 50px;
+        width: auto;
+        height: 80px;
+        /* width: 50px;
+        height: 50px; */
         font-size: 10px;
     }
     
@@ -471,7 +520,7 @@
 .load-more-btn:focus,
 .upload-btn:focus,
 #back-to-top-btn:focus {
-    outline: 2px solid #007cba;
+    outline: 2px solid #fff;
     outline-offset: 2px;
 }
 
@@ -492,4 +541,146 @@
 
 .emotion-categories::-webkit-scrollbar-thumb:hover {
     background: #555;
+}
+
+
+/* Modal Styles */
+.art-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    overflow-y: auto;
+    pointer-events: all !important;
+}
+
+body.modal-open {
+    overflow: hidden;
+}
+
+body.modal-open .art-item {
+    pointer-events: none;
+}
+
+body.modal-open .art-modal {
+    pointer-events: all;
+}
+
+.art-modal-content {
+    pointer-events: all !important;
+}
+
+.art-modal-content {
+    position: relative;
+    background-color: #fff;
+    margin: 40px auto;
+    padding: 30px;
+    max-width: 1000px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.modal-close {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    font-size: 24px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    transition: background-color 0.3s;
+}
+
+.modal-close:hover {
+    background-color: #f0f0f0;
+}
+
+.modal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+.modal-media img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+.modal-content h2 {
+    margin: 0 0 10px 0;
+}
+
+.modal-artist {
+    color: #666;
+    margin: 0 0 20px 0;
+}
+
+.modal-description {
+    margin-bottom: 20px;
+}
+
+.modal-tags {
+    margin-bottom: 20px;
+}
+
+.tags-label {
+    font-weight: bold;
+}
+
+.modal-emotions {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.emotion-thumbnail {
+    position: relative;
+    width: 60px;
+    height: 60px;
+}
+
+.emotion-thumbnail img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.emotion-name {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.emotion-thumbnail:hover .emotion-name {
+    display: block;
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+    .modal-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .art-modal-content {
+        margin: 20px;
+        padding: 20px;
+    }
 }

@@ -198,4 +198,30 @@ jQuery(document).ready(function($) {
     $('.upload-btn').on('click', function() {
         alert('Upload functionality would be implemented here');
     });
+    //
+    // Add to your existing jQuery ready function
+    $('.art-item').on('click', function() {
+        console.log("fired");
+        const postId = $(this).data('post-id');
+        $(`#modal-${postId}`).fadeIn();
+        $('body').addClass('modal-open');
+    });
+
+    $('.modal-close').on('click', function() {
+        $(this).closest('.art-modal').fadeOut();
+        $('body').removeClass('modal-open');
+    });
+
+    // Close modal when clicking outside
+    $('.art-modal').on('click', function(e) {
+        if ($(e.target).hasClass('art-modal')) {
+            $(this).fadeOut();
+            $('body').removeClass('modal-open');
+        }
+    });
+
+    // Prevent modal close when clicking modal content
+    $('.art-modal-content').on('click', function(e) {
+        e.stopPropagation();
+    });
 });

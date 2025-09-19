@@ -68,7 +68,7 @@
 
 /* Focus styles for accessibility */
 .art-studio-custom-button:focus {
-    outline: 2px solid #0073aa;
+    outline: 2px solid #fff;
     outline-offset: 2px;
     border-radius: 2px;
 }

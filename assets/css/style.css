@@ -2,3 +2,8 @@
 hr.wp-block-separator.is-style-wide {
     width: 100%;
 }
+
+:where(.wp-site-blocks *:focus) {
+    outline: 0px solid #fff;
+    outline-offset: 0px;
+}

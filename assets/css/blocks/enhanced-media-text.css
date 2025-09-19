@@ -219,7 +219,7 @@
 
 /* Focus and hover states for accessibility */
 .wp-block-custom-enhanced-media-text__third-image:focus-within {
-    outline: 2px solid #007cba;
+    outline: 2px solid #fff;
     outline-offset: 2px;
 }
 

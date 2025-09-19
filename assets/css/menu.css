@@ -1,7 +1,8 @@
 /* Art Studio Custom Menu Styles */
 
 #art-studio-custom-menu {
-  position: fixed;
+  /* position: fixed; */
+  position: relative;
   top: 20px;
   right: 20px;
   z-index: 9999;
@@ -38,7 +39,7 @@
 }
 
 .toggle-menu-modified.active #line3 {
-  transform: rotate(-45deg) translate(7px, -6px);
+  transform: rotate(-45deg) translate(14px, -14px);
 }
 
 /* Menu Navigation */
@@ -60,6 +61,7 @@
   display: block;
   opacity: 1;
   transform: translateY(0);
+  margin-top: 70px;
 }
 
 .art-studio-menu {
@@ -72,7 +74,7 @@
 .art-studio-menu .menu-item {
   position: relative;
   text-align: right;
-  font-size: 20px;
+  /* font-size: 20px; */
   width: 100%;
   margin-bottom: 5px;
 }
@@ -80,11 +82,11 @@
 .art-studio-menu .menu-item a {
   display: block;
   text-decoration: none;
-  font-weight: 300;
+  /* font-weight: 300;
   line-height: 2.3;
   font-size: 32px;
   line-height: 46px;
-  font-family: 'IBM Plex Sans', sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif; */
   color: #000;
   transition: color 0.3s ease;
 }
@@ -110,7 +112,7 @@
 
 /* Admin Controls */
 .menu-item-controls {
-  display: none;
+  /* display: none;
   position: absolute;
   left: -120px;
   top: 50%;
@@ -118,7 +120,16 @@
   background: rgba(255, 255, 255, 0.9);
   padding: 5px;
   border-radius: 4px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); */
+    display: none;
+    position: relative;
+    /* left: -120px; */
+    /* top: 50%; */
+    /* transform: translateY(-50%); */
+    /* background: rgba(255, 255, 255, 0.9); */
+    /* padding: 5px; */
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .menu-item:hover .menu-item-controls {
@@ -126,7 +137,7 @@
 }
 
 .menu-item-controls button {
-  background: #0073aa;
+  background: #fff;
   color: white;
   border: none;
   padding: 3px 8px;
@@ -148,7 +159,7 @@
 }
 
 .menu-admin-controls button {
-  background: #0073aa;
+  background: #fff;
   color: white;
   border: none;
   padding: 8px 15px;
@@ -240,7 +251,7 @@
 }
 
 .form-actions button[type="submit"] {
-  background: #0073aa;
+  background: #fff;
   color: white;
 }
 
@@ -252,28 +263,28 @@
 /* Responsive Styles */
 @media screen and (max-width: 991px) {
   .art-studio-main-navigation {
-    width: 300px;
+    width: 250px;
     margin-right: 10px;
     max-width: 90vw;
     padding-right: 25px;
   }
   
-  .art-studio-menu .menu-item a {
+  /* .art-studio-menu .menu-item a {
     font-size: 28px;
     line-height: 40px;
-  }
+  } */
 }
 
 @media screen and (max-width: 792px) {
   .art-studio-main-navigation {
-    width: 250px;
+    width: 200px;
     padding: 15px 30px 15px 4px;
   }
   
-  .art-studio-menu .menu-item a {
+  /* .art-studio-menu .menu-item a {
     font-size: 24px;
     line-height: 36px;
-  }
+  } */
   
   .menu-modal-content {
     width: 350px;
@@ -292,10 +303,10 @@
     padding: 12px 20px 12px 4px;
   }
   
-  .art-studio-menu .menu-item a {
+  /* .art-studio-menu .menu-item a {
     font-size: 20px;
     line-height: 32px;
-  }
+  } */
   
   .toggle-menu-modified {
     width: 35px;
@@ -347,7 +358,7 @@
   position: absolute;
   top: -50px;
   right: 0;
-  background: #0073aa;
+  background: #fff;
   color: white;
   padding: 8px 15px;
   border-radius: 4px;
@@ -362,14 +373,14 @@
 
 /* Focus styles for accessibility */
 #primary-menu-trigger:focus {
-  outline: 2px solid #0073aa;
+  outline: 2px solid #fff;
   outline-offset: 2px;
 }
 
 .art-studio-menu a:focus {
-  outline: 2px solid #0073aa;
+  outline: 2px solid #fff;
   outline-offset: 2px;
-  background: rgba(0, 115, 170, 0.1);
+  /* background: rgba(0, 115, 170, 0.1); */
 }
 
 /* High contrast mode support */

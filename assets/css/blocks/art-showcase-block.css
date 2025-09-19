@@ -59,14 +59,22 @@
 }
 
 .art-showcase-image {
-    width: 100%;
-    height: 180px;
-    background: #fff;
-    border-radius: 10px;
-    overflow: hidden;
-    margin-bottom: 15px;
+    /* background: #fff; */
+    
     display: flex;
     align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    height: 180px;
+    background: transparent;
+    /* object-fit: cover; */
+    /* border-radius: 10px; */
+    /* overflow: hidden; */
+    margin-bottom: 15px;
+
+    align-items: center;
+    border: none;
     justify-content: center;
 }
 
@@ -75,6 +83,8 @@
     height: 100%;
     object-fit: cover;
     transition: transform 0.3s ease;
+    border-radius: 10px;
+    box-shadow: rgba(0, 0, 0, 0.09) 0px 2px 1px, rgba(0, 0, 0, 0.09) 0px 4px 2px, rgba(0, 0, 0, 0.09) 0px 8px 4px, rgba(0, 0, 0, 0.09) 0px 16px 8px, rgba(0, 0, 0, 0.09) 0px 32px 16px;
 }
 
 .art-showcase-item:hover .art-showcase-image img {
@@ -291,12 +301,12 @@
 /* Focus styles for accessibility */
 .art-showcase-nav:focus,
 .art-showcase-item:focus {
-    outline: 2px solid #007cba;
+    outline: 2px solid #fff;
     outline-offset: 2px;
 }
 
 .art-showcase-wrapper:focus {
-    outline: 2px solid #007cba;
+    outline: 2px solid #fff;
     outline-offset: 2px;
     border-radius: 8px;
 }

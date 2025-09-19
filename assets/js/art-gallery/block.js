@@ -1,34 +1,47 @@
 (function() {
-    let { registerBlockType } = wp.blocks;
-    let { createElement } = wp.element;
+    const { registerBlockType } = wp.blocks;
+    const { InspectorControls } = wp.blockEditor;
+    const { PanelBody, TextControl } = wp.components;
 
     registerBlockType('custom/art-gallery', {
         title: 'Art Gallery',
-        icon: 'images-alt2',
+        icon: 'format-gallery',
         category: 'art-blocks',
-        description: 'Interactive art gallery with filtering and load more functionality',
+        
+        attributes: {
+            uploadUrl: {
+                type: 'string',
+                default: ''
+            }
+        },
         
         edit: function(props) {
-            return createElement(
-                'div',
-                {
-                    className: 'art-gallery-block-editor',
-                    style: {
-                        padding: '20px',
-                        border: '2px dashed #ccc',
-                        borderRadius: '8px',
-                        textAlign: 'center',
-                        backgroundColor: '#f9f9f9'
-                    }
-                },
-                createElement('h3', null, 'Art Gallery Block'),
-                createElement('p', null, 'This block will display an interactive art gallery with filtering options.'),
-                createElement('p', { style: { fontSize: '14px', color: '#666' } }, 'Preview only available on the frontend.')
-            );
+            const { attributes, setAttributes } = props;
+            
+            return [
+                <InspectorControls>
+                    <PanelBody title="Gallery Settings">
+                        <TextControl
+                            label="Upload Button URL"
+                            value={attributes.uploadUrl}
+                            onChange={(url) => setAttributes({ uploadUrl: url })}
+                            help="Enter the URL where users will be directed to upload artwork"
+                        />
+                    </PanelBody>
+                </InspectorControls>,
+                <div className="art-gallery-block-editor">
+                    <div className="art-gallery-placeholder">
+                        <p>Art Gallery Block</p>
+                        {attributes.uploadUrl && 
+                            <p>Upload URL: {attributes.uploadUrl}</p>
+                        }
+                    </div>
+                </div>
+            ];
         },
         
         save: function() {
-            return null; // Dynamic block, rendered by PHP
+            return null;
         }
     });
 })();
