@@ -195,9 +195,7 @@ jQuery(document).ready(function($) {
     });
     
     // Upload button placeholder
-    $('.upload-btn').on('click', function() {
-        alert('Upload functionality would be implemented here');
-    });
+    
     //
     // Add to your existing jQuery ready function
     $('.art-item').on('click', function() {
@@ -223,5 +221,86 @@ jQuery(document).ready(function($) {
     // Prevent modal close when clicking modal content
     $('.art-modal-content').on('click', function(e) {
         e.stopPropagation();
+    });
+    
+    // ----
+    // Function to get URL parameters
+    function getUrlParameter(name) {
+        name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+        var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+        var results = regex.exec(location.search);
+        return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+    }
+
+    // Check for emotion filter in URL on page load
+    function checkUrlFilters() {
+        const emotionFilter = getUrlParameter('filter_emotion');
+        if (emotionFilter) {
+            // Find and click the corresponding emotion button
+            $(`.emotion-btn[data-emotion="${emotionFilter}"]`).trigger('click');
+            
+            // Scroll to gallery section
+            $('html, body').animate({
+                scrollTop: $('.art-gallery-container').offset().top - 100
+            }, 600);
+        }
+    }
+
+    // Run on page load
+    checkUrlFilters();
+
+    // Update URL when filters change
+    function updateUrl() {
+        const newUrl = currentFilters.emotion ? 
+            addQueryParam(window.location.href, 'filter_emotion', currentFilters.emotion) :
+            removeQueryParam(window.location.href, 'filter_emotion');
+            
+        window.history.pushState({}, '', newUrl);
+    }
+
+    // Helper function to add/update query parameter
+    function addQueryParam(url, key, value) {
+        const re = new RegExp("([?&])" + key + "=.*?(&|$)", "i");
+        const separator = url.indexOf('?') !== -1 ? "&" : "?";
+        if (url.match(re)) {
+            return url.replace(re, '$1' + key + "=" + value + '$2');
+        }
+        else {
+            return url + separator + key + "=" + value;
+        }
+    }
+
+    // Helper function to remove query parameter
+    function removeQueryParam(url, parameter) {
+        const urlparts = url.split('?');   
+        if (urlparts.length >= 2) {
+            const prefix = encodeURIComponent(parameter) + '=';
+            const pars = urlparts[1].split(/[&;]/g);
+
+            for (let i = pars.length; i-- > 0;) {    
+                if (pars[i].lastIndexOf(prefix, 0) !== -1) {   
+                    pars.splice(i, 1);
+                }
+            }
+
+            return urlparts[0] + (pars.length > 0 ? '?' + pars.join('&') : '');
+        }
+        return url;
+    }
+
+    // Modify your existing emotion filter click handler
+    $('.emotion-btn').on('click', function() {
+        const emotion = $(this).data('emotion');
+        currentFilters.emotion = emotion;
+        
+        // Update active state
+        $('.emotion-btn').removeClass('active');
+        $(this).addClass('active');
+        
+        // Update URL
+        updateUrl();
+        
+        // Apply filter
+        applyFilters();
     });
 });

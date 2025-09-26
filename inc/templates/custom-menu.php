@@ -9,20 +9,65 @@
 
 
 class ArtStudioCustomMenu {
+    private static $instance = null;
+    private $is_block_theme;
     
-    public function __construct() {
+    public static function get_instance() {
+        if (null === self::$instance) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+    
+    private function __construct() {
+        error_log('Art Studio Menu: Constructor called');
+        
+        // Check if using block theme
+        $this->is_block_theme = wp_is_block_theme();
+        error_log('Art Studio Menu: Is block theme? ' . ($this->is_block_theme ? 'Yes' : 'No'));
+        
+        // Add appropriate filters based on theme type
+        if ($this->is_block_theme) {
+            // Block theme filters
+            add_filter('render_block_core/navigation', array($this, 'override_navigation_block'), 999999, 2);
+        } else {
+            // Classic theme filters
+            add_filter('wp_nav_menu', array($this, 'override_theme_menu'), 999999, 2);
+            add_filter('wp_page_menu', array($this, 'override_theme_menu'), 999999, 2);
+        }
+        
+        // Common hooks
         add_action('init', array($this, 'init'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
-        // add_action('wp_head', array($this, 'add_menu_to_head'));
         add_action('wp_ajax_save_menu_items', array($this, 'save_menu_items'));
         add_action('wp_ajax_nopriv_save_menu_items', array($this, 'save_menu_items'));
         add_action('admin_menu', array($this, 'add_admin_menu'));
-        add_shortcode('art_studio_menu', array($this, 'display_menu_shortcode'));
-        
-        // Hook to display menu automatically (you can customize this)
-        add_action('wp_body_open', array($this, 'display_menu'));
     }
-    
+
+    /**
+     * Override classic theme menu
+     */
+    public function override_theme_menu($nav_menu, $args) {
+        error_log('Art Studio Menu: Classic theme menu override attempt');
+        error_log('Menu args: ' . print_r($args, true));
+        
+        ob_start();
+        $this->display_menu();
+        return ob_get_clean();
+    }
+
+    /**
+     * Override block theme navigation
+     */
+    public function override_navigation_block($block_content, $block) {
+        error_log('Art Studio Menu: Block theme navigation override attempt');
+        error_log('Block: ' . print_r($block, true));
+        
+        ob_start();
+        $this->display_menu();
+        return ob_get_clean();
+    }
+
     public function init() {
         // Initialize default menu items if they don't exist
         if (!get_option('art_studio_menu_items')) {
@@ -38,6 +83,11 @@ class ArtStudioCustomMenu {
     }
     
     public function enqueue_scripts() {
+        error_log('Art Studio Menu: Enqueuing scripts and styles');
+        // Verify paths
+        error_log('CSS Path: ' . ART_STUDIO_PLUGIN_URL . 'assets/css/menu.css');
+        error_log('JS Path: ' . ART_STUDIO_PLUGIN_URL . 'assets/js/menu.js');
+        
         wp_enqueue_style('art-studio-menu-style', ART_STUDIO_PLUGIN_URL . 'assets/css/menu.css', array(), ART_STUDIO_VERSION);
         wp_enqueue_script('art-studio-menu-script', ART_STUDIO_PLUGIN_URL . 'assets/js/menu.js', array('jquery'), ART_STUDIO_VERSION, true);
         
@@ -76,14 +126,18 @@ class ArtStudioCustomMenu {
                         <?php foreach ($menu_items as $index => $item): ?>
                             <li class="menu-item" data-index="<?php echo $index; ?>">
                                 <?php if ($item['is_home']): ?>
+                                
                                     <a href="<?php echo esc_url($item['url']); ?>">
                                         <svg class="menu-home-icon" width="30" height="34" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M3 9.5L12 2L21 9.5V20C21 20.5523 20.5523 21 20 21H4C3.44772 21 3 20.5523 3 20V9.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                             <path d="M9 21V12H15V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                         </svg>
                                     </a>
+                                
                                 <?php else: ?>
-                                    <a href="<?php echo esc_url($item['url']); ?>"><?php echo esc_html($item['label']); ?></a>
+                                    <h2>
+                                        <a href="<?php echo esc_url($item['url']); ?>"><?php echo esc_html($item['label']); ?></a>
+                                    </h2>
                                 <?php endif; ?>
                                 
                                 <?php if ($is_admin): ?>
@@ -94,7 +148,7 @@ class ArtStudioCustomMenu {
                                 <?php endif; ?>
                             </li>
                             <?php if (!$item['is_home'] && $index < count($menu_items) - 1): ?>
-                                <span class="menu-spacer"></span>
+                                <!-- <span class="menu-spacer"></span> -->
                             <?php endif; ?>
                         <?php endforeach; ?>
                     <?php endif; ?>
@@ -289,16 +343,7 @@ class ArtStudioCustomMenu {
 }
 
 // Initialize the plugin
-new ArtStudioCustomMenu();
+// new ArtStudioCustomMenu();
 
 
-function art_studio_menu_activate() {
-    // Create assets directory if it doesn't exist
-    $upload_dir = wp_upload_dir();
-    $plugin_dir = ART_STUDIO_PLUGIN_PATH . 'assets/';
-    
-    if (!file_exists($plugin_dir)) {
-        wp_mkdir_p($plugin_dir);
-    }
-}
 ?>

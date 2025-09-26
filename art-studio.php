@@ -927,7 +927,16 @@ require_once ART_STUDIO_PLUGIN_PATH . 'inc/templates/custom-menu.php';
 
 // Initialize custom menu
 function init_art_studio_custom_menu() {
+    error_log('Art Studio: Initializing custom menu');
+    // Register nav menus for classic themes
+    if (!wp_is_block_theme()) {
+        register_nav_menus(array(
+            'primary' => __('Primary Menu', 'art-studio'),
+            'header-menu' => __('Header Menu', 'art-studio')
+        ));
+    }
     global $art_studio_custom_menu;
-    $art_studio_custom_menu = new ArtStudioCustomMenu();
+    $art_studio_custom_menu = ArtStudioCustomMenu::get_instance();
+    error_log('Art Studio: Custom menu initialized');
 }
-add_action('plugins_loaded', 'init_art_studio_custom_menu');
+add_action('after_setup_theme', 'init_art_studio_custom_menu', 5);

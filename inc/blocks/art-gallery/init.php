@@ -57,8 +57,13 @@ class ArtGalleryBlock {
             'editor_script' => 'art-studio-art-gallery-block-editor',
             'editor_style' => 'art-studio-art-gallery-block-editor',
             'style' => 'art-studio-art-gallery-block-frontend',
-            'category' => 'art-blocks',
-            'render_callback' => array($this, 'render_block'),
+            'attributes' => array(
+                'uploadUrl' => array(
+                    'type' => 'string',
+                    'default' => ''
+                )
+            ),
+            'render_callback' => array($this, 'render_block')
         ));
     }
     
@@ -88,12 +93,17 @@ class ArtGalleryBlock {
         $artists = $this->get_all_artists();
         
         $initial_arts = $this->get_art_pieces();
+
+        // Get upload URL from attributes
+        $upload_url = !empty($attributes['uploadUrl']) ? $attributes['uploadUrl'] : '#';
         
         ob_start();
         ?>
         <div class="art-gallery-container">
             <!-- Filters -->
             <div class="art-gallery-filters">
+                <div class="emotion-sidebar"></div>
+                <p>Filters:</p>
                 <div class="filter-group">
                     <button class="filter-btn active" data-filter="artist" data-value="">
                         All Artists
@@ -144,6 +154,8 @@ class ArtGalleryBlock {
                         <?php endforeach; ?>
                     </div>
                 </div>
+                <!-- Art Bar -->
+                <div class="art-emotion-bar"></div>
                 
                 <!-- Art Grid -->
                 <div class="art-content">
@@ -162,9 +174,9 @@ class ArtGalleryBlock {
                     
                     <!-- Upload Button -->
                     <div class="upload-container">
-                        <button class="upload-btn">
+                        <a href="<?php echo esc_url($upload_url); ?>" class="upload-btn">
                             + Upload Artwork
-                        </button>
+                        </a>
                     </div>
                     
                     <!-- Back to Top -->
@@ -270,8 +282,13 @@ class ArtGalleryBlock {
             $artist_name = get_post_meta($post->ID, '_artist_name', true);
             $artist_age = get_post_meta($post->ID, '_artist_age', true);
             $featured_image = get_the_post_thumbnail_url($post->ID, 'medium');
+
+            // Get post content and tags
+            $content = apply_filters('the_content', $post->post_content);
+            $tags = get_the_tags($post->ID);
+            $emotions = get_the_terms($post->ID, 'art_emotion');
             
-            $output .= '<div class="art-item">';
+            $output .= '<div class="art-item" data-post-id="' . esc_attr($post->ID) . '">';
             $output .= '<div class="art-image">';
             if ($featured_image) {
                 $output .= '<img src="' . esc_url($featured_image) . '" alt="' . esc_attr($post->post_title) . '">';
@@ -283,7 +300,60 @@ class ArtGalleryBlock {
             $output .= '<h3 class="art-title">' . esc_html($post->post_title) . '</h3>';
             $output .= '<p class="art-artist">' . esc_html($artist_name) . ', Age ' . esc_html($artist_age) . '</p>';
             $output .= '</div>';
+            
+
+            
+            // Add modal HTML
+            $output .= '<div class="art-modal" id="modal-' . esc_attr($post->ID) . '">';
+            $output .= '<div class="art-modal-content">';
+            $output .= '<button class="modal-close">&times;</button>';
+            $output .= '<div class="modal-grid">';
+            
+            // Left column - Image
+            $output .= '<div class="modal-media">';
+            if ($featured_image) {
+                $output .= '<img src="' . esc_url($featured_image) . '" alt="' . esc_attr($post->post_title) . '">';
+            }
             $output .= '</div>';
+            
+            // Right column - Content
+            $output .= '<div class="modal-content">';
+            $output .= '<h2>' . esc_html($post->post_title) . '</h2>';
+            $output .= '<p class="modal-artist">' . esc_html($artist_name) . ', Age ' . esc_html($artist_age) . '</p>';
+            $output .= '<div class="modal-description">' . $content . '</div>';
+            
+            // Tags
+            if ($tags) {
+                $output .= '<div class="modal-tags">';
+                $output .= '<span class="tags-label">Tags:</span> ';
+                $tag_names = array_map(function($tag) {
+                    return esc_html($tag->name);
+                }, $tags);
+                $output .= implode(', ', $tag_names);
+                $output .= '</div>';
+            }
+            
+            // Emotions with images
+            if ($emotions) {
+                $output .= '<div class="modal-emotions">';
+                foreach ($emotions as $emotion) {
+                    $featured_image_id = get_term_meta($emotion->term_id, 'featured_image', true);
+                    if ($featured_image_id) {
+                        $image_url = wp_get_attachment_image_url($featured_image_id, 'thumbnail');
+                        $output .= '<div class="emotion-thumbnail">';
+                        $output .= '<img src="' . esc_url($image_url) . '" alt="' . esc_attr($emotion->name) . '">';
+                        $output .= '<span class="emotion-name">' . esc_html($emotion->name) . '</span>';
+                        $output .= '</div>';
+                    }
+                }
+                $output .= '</div>';
+            }
+            
+            $output .= '</div>'; // End modal-content
+            $output .= '</div>'; // End modal-grid
+            $output .= '</div>'; // End art-modal-content
+            $output .= '</div>'; // End art-modal
+            $output .= '</div>'; // End art-item
         }
         
         return $output;

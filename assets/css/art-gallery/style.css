@@ -1,3 +1,6 @@
+html {
+    scroll-behavior: smooth;
+}
 /* Art Gallery Block Styles */
 .art-gallery-container {
     max-width: 1200px;
@@ -110,7 +113,7 @@
 }
 
 .apply-age-filter:hover {
-    background: #005a87;
+    background: rgba(17, 17, 17, 0.05);;
 }
 
 /* Main layout */
@@ -145,11 +148,23 @@
 }
 
 .emotion-btn.active .emotion-icon.all-emotions {
-    border-color: black;
-    border: 2px solid black;
+    /* border-color: black;
+    border: 2px solid black; */
     background: none;
     color: black;
 }
+/* Target active emotion buttons, but NOT the one with .all-emotions */
+/* .emotion-btn.active .emotion-icon:not(.all-emotions) {
+    border: 2px solid black;
+    background: transparent;
+    color: white;
+} */
+/* .emotion-btn.active:not(.all-emotions) {
+    border: 2px solid black;
+    background: transparent;
+    color: white;
+} */
+
 
 .emotion-icon {
     /* 80px */
@@ -204,9 +219,9 @@
     transition: transform 0.3s ease;
 }
 
-/* .art-item:hover {
-    transform: translateY(-5px);
-} */
+.art-item:hover {
+    cursor: pointer;
+}
 
 .art-image {
     width: 100%;
@@ -265,7 +280,7 @@
 .load-more-btn {
     background: none;
     color: black;
-    border: 1.7px solid #887;
+    border: 2px solid #887;
     padding: 8px 20px;
     border-radius: 10px;
     cursor: pointer;
@@ -274,7 +289,7 @@
 }
 
 .load-more-btn:hover {
-    background: #005a87;
+    background: rgba(17, 17, 17, 0.05);
     transform: translateY(-2px);
 }
 
@@ -286,16 +301,16 @@
 .upload-btn {
     background: none;
     color: black;
-    border: 1.7px solid #887;
+    border: 2px solid #887;
     padding: 8px 20px;
     border-radius: 10px;
     cursor: pointer;
-    font-size: 16px;
+    /* font-size: 16px; */
     transition: all 0.3s ease;
 }
 
 .upload-btn:hover {
-    background: #218838;
+    background: rgba(17, 17, 17, 0.05);;
     transform: translateY(-2px);
 }
 
@@ -310,6 +325,7 @@
     top: -90px;
     /* right: 30px; */
     margin-left: auto;
+    max-width:50vw;
     right: 0;
     display: flex;
     z-index: 1000;
@@ -579,7 +595,8 @@ body.modal-open .art-modal {
     background-color: #fff;
     margin: 40px auto;
     padding: 30px;
-    max-width: 1000px;
+    /* max-width: 1000px; */
+    max-width: 800px;
     border-radius: 12px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
@@ -683,4 +700,54 @@ body.modal-open .art-modal {
         margin: 20px;
         padding: 20px;
     }
+    
 }
+
+
+
+.emotion-btn {
+  /* force square shape */
+  width: 95px;   /* pick a size */
+  height: 95px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  /* make it circular when active */
+  border-radius: 50%;
+  overflow: hidden; /* ensures image doesn’t spill out */
+}
+
+.emotion-btn img.emotion-icon {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain; /* keeps aspect ratio */
+}
+
+/* Active state styling */
+.emotion-btn.active:not(.all-emotions) {
+  border: 2px solid black;
+}
+/* Base Styles (No-JS) */
+/* 
+.art-gallery-container[data-has-js="false"] .emotion-btn {
+    display: inline-block;
+    padding: 8px 16px;
+    margin: 4px;
+    text-decoration: none;
+    color: inherit;
+}
+
+.art-gallery-container[data-has-js="false"] .load-more-container,
+.art-gallery-container[data-has-js="false"] .filter-toggle {
+    display: none;
+}
+
+/* JS-Enhanced Styles *//*
+.art-gallery-container[data-has-js="true"] .emotion-btn {
+    cursor: pointer;
+}
+
+.art-gallery-container[data-has-js="true"] .emotion-categories a {
+    pointer-events: none; /* Disable link behavior when JS is active */ /*
+} */

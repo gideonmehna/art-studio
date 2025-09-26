@@ -172,6 +172,11 @@
     .creative-emotion-item:hover {
         transform: scale(1.05) !important;
     }
+    .custom-three-layout img {
+        position: relative;
+        top: 70px;
+    }
+
 }
 
 /* Creative Emotion Image Styles */
