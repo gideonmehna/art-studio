@@ -198,12 +198,12 @@ jQuery(document).ready(function($) {
     
     //
     // Add to your existing jQuery ready function
-    $('.art-item').on('click', function() {
-        console.log("fired");
-        const postId = $(this).data('post-id');
-        $(`#modal-${postId}`).fadeIn();
-        $('body').addClass('modal-open');
-    });
+    // $('.art-item').on('click', function() {
+    //     console.log("fired");
+    //     const postId = $(this).data('post-id');
+    //     $(`#modal-${postId}`).fadeIn();
+    //     $('body').addClass('modal-open');
+    // });
 
     $('.modal-close').on('click', function() {
         $(this).closest('.art-modal').fadeOut();
@@ -290,17 +290,47 @@ jQuery(document).ready(function($) {
 
     // Modify your existing emotion filter click handler
     $('.emotion-btn').on('click', function() {
-        const emotion = $(this).data('emotion');
-        currentFilters.emotion = emotion;
-        
-        // Update active state
-        $('.emotion-btn').removeClass('active');
-        $(this).addClass('active');
-        
-        // Update URL
-        updateUrl();
-        
-        // Apply filter
-        applyFilters();
+        // Check if JavaScript is enabled and working
+        if (document.querySelector('.art-gallery-container').getAttribute('data-has-js') === 'true') {
+            // Prevent default link behavior only when JS is working
+            e.preventDefault();
+            
+            const emotion = $(this).data('emotion');
+            currentFilters.emotion = emotion;
+            
+            // Update active state
+            $('.emotion-btn').removeClass('active');
+            $(this).addClass('active');
+            
+            // Update URL without reload
+            updateUrl();
+            
+            // Apply filter via AJAX
+            applyFilters();
+        }
+        // If JS is not enabled, let the link work normally (PHP fallback)
+    });
+
+    // With these delegated event handlers:
+    $(document).on('click', '.art-item', function() {
+        const postId = $(this).data('post-id');
+        $(`#modal-${postId}`).fadeIn();
+        $('body').addClass('modal-open');
+    });
+
+    $(document).on('click', '.modal-close', function() {
+        $(this).closest('.art-modal').fadeOut();
+        $('body').removeClass('modal-open');
+    });
+
+    $(document).on('click', '.art-modal', function(e) {
+        if ($(e.target).hasClass('art-modal')) {
+            $(this).fadeOut();
+            $('body').removeClass('modal-open');
+        }
+    });
+
+    $(document).on('click', '.art-modal-content', function(e) {
+        e.stopPropagation();
     });
 });

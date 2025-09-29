@@ -105,6 +105,55 @@ jQuery(document).ready(function($) {
                 smoothScroll('right');
             }
         });
+
+        // Modal functionality
+        // $(document).on('click', '.art-showcase-item', function() {
+        //     const postId = $(this).data('post-id');
+        //     $(`#modal-${postId}`).fadeIn();
+        //     // $('body').addClass('modal-open');
+        //     $(`#modal-${postId}`).addClass('modal-open');
+        //     console.log('Modal opened for post ID:', postId);
+        //     console.log('Modal element:', $(`#modal-${postId}`));
+        // });
+        $(document).on('click', '.art-showcase-item', function() {
+            const $modal = $(this).find('.art-modal'); // modal inside this item
+            $modal.fadeIn().addClass('modal-open');
+            $('body').addClass('opened-modal');
+
+            console.log('Modal opened for this showcase item');
+            console.log('Modal element:', $modal);
+        });
+
+
+        $(document).on('click', '.modal-close', function() {
+            $(this).closest('.art-modal').fadeOut();
+            // $('body').removeClass('modal-open');
+            $('body').removeClass('opened-modal');
+            $(this).closest('.art-modal').removeClass('modal-open');
+        });
+
+        $(document).on('click', '.art-modal', function(e) {
+            if ($(e.target).hasClass('art-modal')) {
+                $(this).fadeOut();
+                // $('body').removeClass('modal-open');
+                $('body').removeClass('opened-modal');
+                $(this).removeClass('modal-open');
+            }
+        });
+
+        $(document).on('click', '.art-modal-content', function(e) {
+            e.stopPropagation();
+        });
+
+        // Add keyboard support for closing modal
+        $(document).keyup(function(e) {
+            if (e.key === "Escape") {
+                $('.art-modal').fadeOut();
+                // $('body').removeClass('modal-open');
+                $('body').removeClass('opened-modal');
+                $('.art-modal').removeClass('modal-open');
+            }
+        });
         
         // Make wrapper focusable for keyboard navigation
         $wrapper.attr('tabindex', '0');

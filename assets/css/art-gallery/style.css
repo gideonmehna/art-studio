@@ -729,25 +729,55 @@ body.modal-open .art-modal {
   border: 2px solid black;
 }
 /* Base Styles (No-JS) */
-/* 
+/* No-JS Enhancements */
+.art-gallery-container[data-has-js="false"] .js-only {
+    display: none !important;
+}
+
 .art-gallery-container[data-has-js="false"] .emotion-btn {
-    display: inline-block;
-    padding: 8px 16px;
-    margin: 4px;
     text-decoration: none;
     color: inherit;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-.art-gallery-container[data-has-js="false"] .load-more-container,
-.art-gallery-container[data-has-js="false"] .filter-toggle {
+.art-gallery-container[data-has-js="false"] .no-js-form {
+    margin: 0;
+    padding: 0;
+}
+
+.art-gallery-container[data-has-js="false"] .artist-filter {
+    display: block !important;
+}
+
+/* JS Enhancements */
+.art-gallery-container[data-has-js="true"] .no-js-form {
     display: none;
 }
+/* No-JS Filters */
+.no-js-filters .filter-group {
+    margin-bottom: 15px;
+}
 
-/* JS-Enhanced Styles *//*
-.art-gallery-container[data-has-js="true"] .emotion-btn {
+.no-js-filters .artist-filter,
+.no-js-filters .age-min,
+.no-js-filters .age-max {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-right: 10px;
+}
+
+.no-js-filters .apply-age-filter {
+    padding: 8px 16px;
+    background: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
     cursor: pointer;
 }
 
-.art-gallery-container[data-has-js="true"] .emotion-categories a {
-    pointer-events: none; /* Disable link behavior when JS is active */ /*
-} */
+/* Ensure JS filters maintain your existing styles */
+.js-filters {
+    display: none; /* Initially hidden, shown by JS */
+}

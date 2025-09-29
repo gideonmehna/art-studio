@@ -118,6 +118,54 @@ function art_studio_render_showcase_block($attributes) {
                                 <h3 class="art-showcase-artwork-title"><?php echo esc_html($art_piece->post_title); ?></h3>
                                 <p class="art-showcase-artist"><?php echo esc_html($artist_name); ?><?php if ($artist_age): ?>, <?php echo __('Age', 'art-studio') . ' ' . esc_html($artist_age); ?><?php endif; ?></p>
                             </div>
+                            
+                            <!-- Add Modal Structure -->
+                            <div class="art-modal" id="modal-<?php echo esc_attr($art_piece->ID); ?>">
+                                <div class="art-modal-content">
+                                    <button class="modal-close">&times;</button>
+                                    <div class="modal-grid">
+                                        <div class="modal-media">
+                                            <?php if ($featured_image): ?>
+                                                <img src="<?php echo esc_url($featured_image); ?>" alt="<?php echo esc_attr($art_piece->post_title); ?>">
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="modal-content">
+                                            <h2><?php echo esc_html($art_piece->post_title); ?></h2>
+                                            <p class="modal-artist"><?php echo esc_html($artist_name); ?>, Age <?php echo esc_html($artist_age); ?></p>
+                                            <div class="modal-description"><?php echo apply_filters('the_content', $art_piece->post_content); ?></div>
+                                            
+                                            <?php 
+                                            $tags = get_the_tags($art_piece->ID);
+                                            if ($tags): ?>
+                                                <div class="modal-tags">
+                                                    <span class="tags-label">Tags:</span> 
+                                                    <?php echo implode(', ', array_map(function($tag) {
+                                                        return esc_html($tag->name);
+                                                    }, $tags)); ?>
+                                                </div>
+                                            <?php endif; ?>
+
+                                            <?php 
+                                            $emotions = get_the_terms($art_piece->ID, 'art_emotion');
+                                            if ($emotions): ?>
+                                                <div class="modal-emotions">
+                                                    <?php foreach ($emotions as $emotion):
+                                                        $featured_image_id = get_term_meta($emotion->term_id, 'featured_image', true);
+                                                        if ($featured_image_id):
+                                                            $image_url = wp_get_attachment_image_url($featured_image_id, 'thumbnail');
+                                                            ?>
+                                                            <div class="emotion-thumbnail">
+                                                                <img src="<?php echo esc_url($image_url); ?>" alt="<?php echo esc_attr($emotion->name); ?>">
+                                                                <span class="emotion-name"><?php echo esc_html($emotion->name); ?></span>
+                                                            </div>
+                                                        <?php endif; ?>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     <?php endforeach; ?>
                 </div>

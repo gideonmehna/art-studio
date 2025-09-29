@@ -91,104 +91,157 @@ class ArtGalleryBlock {
         ));
         
         $artists = $this->get_all_artists();
-        
         $initial_arts = $this->get_art_pieces();
-
-        // Get upload URL from attributes
         $upload_url = !empty($attributes['uploadUrl']) ? $attributes['uploadUrl'] : '#';
         
         ob_start();
         ?>
-        <div class="art-gallery-container">
-            <!-- Filters -->
+        <!-- Base Gallery Container (Works without JS) -->
+        <div class="art-gallery-container" data-has-js="false">
             <div class="art-gallery-filters">
                 <div class="emotion-sidebar"></div>
                 <p>Filters:</p>
-                <div class="filter-group">
-                    <button class="filter-btn active" data-filter="artist" data-value="">
-                        All Artists
-                    </button>
-                    <select class="artist-filter" style="display: none;">
-                        <option value="">All Artists</option>
-                        <?php foreach ($artists as $artist): ?>
-                            <option value="<?php echo esc_attr($artist); ?>"><?php echo esc_html($artist); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                    <button class="filter-toggle" data-target="artist">Artist ▼</button>
-                </div>
                 
-                <div class="filter-group">
-                    <button class="filter-btn active" data-filter="age" data-value="">
-                        All Ages
-                    </button>
-                    <div class="age-filter" style="display: none;">
-                        <input type="number" class="age-min" placeholder="Min age" min="1" max="18">
-                        <input type="number" class="age-max" placeholder="Max age" min="1" max="18">
-                        <button class="apply-age-filter">Apply</button>
+                <!-- No-JS version -->
+                <form method="get" class="no-js-filters">
+                    <div class="filter-group">
+                        <select name="artist" class="artist-filter">
+                            <option value="">All Artists</option>
+                            <?php foreach ($artists as $artist): ?>
+                                <option value="<?php echo esc_attr($artist); ?>" 
+                                    <?php selected(isset($_GET['artist']) ? $_GET['artist'] : '', $artist); ?>>
+                                    <?php echo esc_html($artist); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
-                    <button class="filter-toggle" data-target="age">Age ▼</button>
+                    
+                    <div class="filter-group">
+                        <input type="number" name="age_min" class="age-min" placeholder="Min age" min="1" max="18" 
+                            value="<?php echo isset($_GET['age_min']) ? intval($_GET['age_min']) : ''; ?>">
+                        <input type="number" name="age_max" class="age-max" placeholder="Max age" min="1" max="18"
+                            value="<?php echo isset($_GET['age_max']) ? intval($_GET['age_max']) : ''; ?>">
+                        <button type="submit" class="apply-age-filter">Apply</button>
+                    </div>
+                </form>
+                
+                <!-- JS-enhanced version -->
+                <div class="js-filters" style="gap: 20px; display: flex;flex-direction: row;flex-wrap: nowrap;">
+                    <div class="filter-group">
+                        <button class="filter-btn active" data-filter="artist" data-value="">
+                            All Artists
+                        </button>
+                        <select class="artist-filter" style="display: none;">
+                            <option value="">All Artists</option>
+                            <?php foreach ($artists as $artist): ?>
+                                <option value="<?php echo esc_attr($artist); ?>">
+                                    <?php echo esc_html($artist); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <button class="filter-toggle" data-target="artist">Artist ▼</button>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <button class="filter-btn active" data-filter="age" data-value="">
+                            All Ages
+                        </button>
+                        <div class="age-filter" style="display: none;">
+                            <input type="number" class="age-min" placeholder="Min age" min="1" max="18">
+                            <input type="number" class="age-max" placeholder="Max age" min="1" max="18">
+                            <button class="apply-age-filter">Apply</button>
+                        </div>
+                        <button class="filter-toggle" data-target="age">Age ▼</button>
+                    </div>
                 </div>
             </div>
             
             <div class="art-gallery-main">
-                <!-- Emotion Categories Sidebar -->
                 <div class="emotion-sidebar">
                     <div class="emotion-categories">
-                        <button class="emotion-btn active" data-emotion="">
+                        <a href="<?php echo esc_url(remove_query_arg('filter_emotion')); ?>" 
+                           class="emotion-btn <?php echo !isset($_GET['filter_emotion']) ? 'active' : ''; ?>">
                             <div class="emotion-icon all-emotions">All</div>
-                        </button>
-                       
+                        </a>
+                        
                         <?php foreach ($emotions as $emotion): ?>
-                          
                             <?php 
                             $featured_image = get_term_meta($emotion->term_id, 'featured_image', true);
                             $image_url = $featured_image ? wp_get_attachment_url($featured_image) : '';
+                            $is_active = isset($_GET['filter_emotion']) && $_GET['filter_emotion'] === $emotion->slug;
                             ?>
-                            <button class="emotion-btn" data-emotion="<?php echo esc_attr($emotion->slug); ?>">
+                            <a href="<?php echo esc_url(add_query_arg('filter_emotion', $emotion->slug)); ?>" 
+                               class="emotion-btn <?php echo $is_active ? 'active' : ''; ?>"
+                               data-emotion="<?php echo esc_attr($emotion->slug); ?>">
                                 <?php if ($image_url): ?>
-                                    <img src="<?php echo esc_url($image_url); ?>" alt="<?php echo esc_attr($emotion->name); ?>" class="emotion-icon">
+                                    <img src="<?php echo esc_url($image_url); ?>" 
+                                         alt="<?php echo esc_attr($emotion->name); ?>" 
+                                         class="emotion-icon">
                                 <?php else: ?>
-                                    <div class="emotion-icon"><?php echo esc_html(substr($emotion->name, 0, 1)); ?></div>
+                                    <div class="emotion-icon">
+                                        <?php echo esc_html(substr($emotion->name, 0, 1)); ?>
+                                    </div>
                                 <?php endif; ?>
-                            </button>
+                            </a>
                         <?php endforeach; ?>
                     </div>
                 </div>
-                <!-- Art Bar -->
+                
                 <div class="art-emotion-bar"></div>
                 
-                <!-- Art Grid -->
                 <div class="art-content">
                     <div class="art-grid" id="art-grid">
-                        <?php echo $this->render_art_items($initial_arts['posts']); ?>
+                        <?php 
+                        // Get filtered results if parameters exist
+                        $filter_args = array();
+                        if (!empty($_GET['filter_emotion'])) {
+                            $filter_args['emotion'] = sanitize_text_field($_GET['filter_emotion']);
+                        }
+                        if (!empty($_GET['artist'])) {
+                            $filter_args['artist'] = sanitize_text_field($_GET['artist']);
+                        }
+                        
+                        $filtered_arts = !empty($filter_args) ? 
+                            $this->get_art_pieces($filter_args) : 
+                            $initial_arts;
+                        
+                        echo $this->render_art_items($filtered_arts['posts']); 
+                        ?>
                     </div>
                     
-                    <!-- Load More Button -->
-                    <?php if ($initial_arts['has_more']): ?>
-                        <div class="load-more-container">
+                    <?php if ($filtered_arts['has_more']): ?>
+                        <div class="load-more-container js-only">
                             <button id="load-more-btn" class="load-more-btn">
                                 Load More Artwork
                             </button>
                         </div>
                     <?php endif; ?>
                     
-                    <!-- Upload Button -->
                     <div class="upload-container">
                         <a href="<?php echo esc_url($upload_url); ?>" class="upload-btn">
                             + Upload Artwork
                         </a>
                     </div>
-                    
-                    <!-- Back to Top -->
-                    <div class="back-to-top">
-                        <button id="back-to-top-btn">
-                            <span class="back-to-top-text">back to top</span>
-                            <span class="back-to-top-arrow">↑</span>
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>
+
+        <!-- JavaScript Enhancement -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const gallery = document.querySelector('.art-gallery-container');
+                if (gallery) {
+                    gallery.setAttribute('data-has-js', 'true');
+                    // Hide no-js form and show JS version
+                    const noJsFilters = gallery.querySelector('.no-js-filters');
+                    const jsFilters = gallery.querySelector('.js-filters');
+                    if (noJsFilters && jsFilters) {
+                        noJsFilters.style.display = 'none';
+                        jsFilters.style.display = 'flex';
+                    }
+                }
+            });
+        </script>
         <?php
         return ob_get_clean();
     }
