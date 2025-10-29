@@ -7,3 +7,32 @@ hr.wp-block-separator.is-style-wide {
     outline: 0px solid #fff;
     outline-offset: 0px;
 }
+
+.copyrighted-img {
+  position: relative;
+  display: inline-block;
+}
+
+/* Create a wrapper if needed */
+.copyrighted-img::after, img::after {
+  content: "© 2025 CCDMP | Illustrations by Pei Yu Chang.";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  font-size: 0.8em;
+  padding: 4px 6px;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+/* Show on hover or focus */
+.copyrighted-img:hover::after,
+.copyrighted-img:focus::after, img:hover::after,
+img:focus::after {
+  opacity: 1;
+}

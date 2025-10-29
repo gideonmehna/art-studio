@@ -182,6 +182,9 @@ class ArtGalleryBlock {
                                         <?php echo esc_html(substr($emotion->name, 0, 1)); ?>
                                     </div>
                                 <?php endif; ?>
+                                <div class="emotion-caption">
+                                    <?php echo esc_html($emotion->name); ?>
+                                </div>
                             </a>
                         <?php endforeach; ?>
                     </div>

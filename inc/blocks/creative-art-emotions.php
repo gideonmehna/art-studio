@@ -139,14 +139,17 @@ function render_creative_art_emotions_block($attributes) {
 
             $output .= '<div class="creative-emotion-image">';
             $output .= '<img src="' . esc_url($image_url) . '" alt="' . esc_attr($image_alt) . '" />';
-            $output .= '<div class="creative-emotion-caption">' . esc_html($emotion->name) . '</div>';
+            
             $output .= '</div>';
+
+            $output .= '<div class="creative-emotion-caption">' . esc_html($emotion->name) . '</div>';
         } else {
             // Fallback placeholder
             $output .= '<div class="creative-emotion-image creative-emotion-placeholder">';
             $output .= '<span class="emotion-initial">' . esc_html(substr($emotion->name, 0, 1)) . '</span>';
-            $output .= '<div class="creative-emotion-caption">' . esc_html($emotion->name) . '</div>';
             $output .= '</div>';
+            
+            $output .= '<div class="creative-emotion-caption">' . esc_html($emotion->name) . '</div>';
         }
         
         // Optional overlay with count

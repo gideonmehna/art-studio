@@ -204,7 +204,8 @@
 /* Creative Emotion Caption */
 .creative-emotion-caption {
     position: absolute;
-    bottom: -35px;
+    bottom: -15px;
+    /* bottom: -35px; */
     left: 50%;
     transform: translateX(-50%);
     /* background: rgba(0, 0, 0, 0.8); */
@@ -220,10 +221,10 @@
     z-index: 100;
 }
 
-.creative-emotion-item:hover .creative-emotion-caption {
+.creative-emotion-item:hover .creative-emotion-caption, .creative-emotion-item:focus-within .creative-emotion-caption{
     opacity: 1;
     visibility: visible;
-    bottom: -40px;
+    /* bottom: -40px; */
 }
 
 /* Placeholder Styles */

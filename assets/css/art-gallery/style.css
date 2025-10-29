@@ -165,6 +165,31 @@ html {
     color: white;
 } */
 
+/* Creative Emotion Caption */
+.emotion-caption {
+    position: absolute;
+    bottom: -10px;
+    /* bottom: -35px; */
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255,255,255, 0.8); 
+    color: black;
+    padding: 3px 6px;
+    border-radius: 15px;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 100;
+}
+
+.emotion-btn:hover .emotion-caption,.emotion-btn:focus-within .emotion-caption{
+    opacity: 1;
+    visibility: visible;
+}
+
 
 .emotion-icon {
     /* 80px */
@@ -715,7 +740,8 @@ body.modal-open .art-modal {
 
   /* make it circular when active */
   border-radius: 50%;
-  overflow: hidden; /* ensures image doesn’t spill out */
+  /* overflow: hidden;  */
+  /* ensures image doesn’t spill out */
 }
 
 .emotion-btn img.emotion-icon {

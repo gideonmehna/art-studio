@@ -205,7 +205,7 @@
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 9999;
     overflow-y: auto;
-    /* pointer-events: all !important; */
+    isolation: isolate;  /* Creates stacking context */
 }
 /* 
 body.modal-open {
@@ -235,12 +235,13 @@ body.opened-modal .art-modal.modal-open {
 } */
 .art-modal.modal-open {
     display: block;
+    overflow: hidden;
    /* pointer-events: all; */
 }
 
-body.opened-modal {
+/* body.opened-modal {
     overflow: hidden;
-}
+} */
 
 .art-modal-content {
     position: relative;
@@ -343,6 +344,24 @@ body.opened-modal {
 
 .emotion-thumbnail:hover .emotion-name {
     display: block;
+}
+
+/* Add this class */
+.modal-active {
+    position: relative;
+    /* z-index: 9998; */
+}
+
+/* Prevent hover effects when modal is open */
+.art-showcase-wrapper.has-open-modal .art-showcase-item {
+    transform: none !important;
+    box-shadow: none !important;
+    transition: none !important;
+}
+
+.art-showcase-wrapper.has-open-modal .art-showcase-item:hover {
+    transform: none !important;
+    box-shadow: none !important;
 }
 
 /* Mobile Responsiveness */

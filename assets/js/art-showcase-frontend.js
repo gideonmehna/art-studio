@@ -107,51 +107,45 @@ jQuery(document).ready(function($) {
         });
 
         // Modal functionality
-        // $(document).on('click', '.art-showcase-item', function() {
-        //     const postId = $(this).data('post-id');
-        //     $(`#modal-${postId}`).fadeIn();
-        //     // $('body').addClass('modal-open');
-        //     $(`#modal-${postId}`).addClass('modal-open');
-        //     console.log('Modal opened for post ID:', postId);
-        //     console.log('Modal element:', $(`#modal-${postId}`));
-        // });
         $(document).on('click', '.art-showcase-item', function() {
-            const $modal = $(this).find('.art-modal'); // modal inside this item
+            const $modal = $(this).find('.art-modal');
+            const $wrapper = $(this).closest('.art-showcase-wrapper');
+            
+            // Add active states
+            $(this).addClass('modal-active');
+            $wrapper.addClass('has-open-modal');
+            
+            // Show modal
             $modal.fadeIn().addClass('modal-open');
             $('body').addClass('opened-modal');
-
-            console.log('Modal opened for this showcase item');
-            console.log('Modal element:', $modal);
         });
 
-
-        $(document).on('click', '.modal-close', function() {
-            $(this).closest('.art-modal').fadeOut();
-            // $('body').removeClass('modal-open');
+        function closeModal() {
+            const $modal = $('.art-modal.modal-open');
+            const $item = $modal.closest('.art-showcase-item');
+            const $wrapper = $modal.closest('.art-showcase-wrapper');
+            
+            // Remove active states
+            $item.removeClass('modal-active');
+            $wrapper.removeClass('has-open-modal');
+            
+            // Hide modal
+            $modal.fadeOut().removeClass('modal-open');
             $('body').removeClass('opened-modal');
-            $(this).closest('.art-modal').removeClass('modal-open');
-        });
+        }
+
+        // Update existing close handlers to use closeModal()
+        $(document).on('click', '.modal-close', closeModal);
 
         $(document).on('click', '.art-modal', function(e) {
             if ($(e.target).hasClass('art-modal')) {
-                $(this).fadeOut();
-                // $('body').removeClass('modal-open');
-                $('body').removeClass('opened-modal');
-                $(this).removeClass('modal-open');
+                closeModal();
             }
         });
 
-        $(document).on('click', '.art-modal-content', function(e) {
-            e.stopPropagation();
-        });
-
-        // Add keyboard support for closing modal
         $(document).keyup(function(e) {
             if (e.key === "Escape") {
-                $('.art-modal').fadeOut();
-                // $('body').removeClass('modal-open');
-                $('body').removeClass('opened-modal');
-                $('.art-modal').removeClass('modal-open');
+                closeModal();
             }
         });
         

@@ -105,7 +105,8 @@
     z-index: 2;
 }
 
-.art-emotion-item:hover .art-emotion-image .image-caption {
+.art-emotion-item:hover .art-emotion-image .image-caption,
+.art-emotion-item:focus-within .art-emotion-image .image-caption {
     display: block;
 }
 
