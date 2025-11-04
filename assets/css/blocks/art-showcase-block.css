@@ -214,9 +214,38 @@
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 9999;
+    /* Allow modal to scroll when content is taller than viewport */
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     isolation: isolate;  /* Creates stacking context */
 }
+
+/* When open, keep modal scrollable (don't hide overflow here) */
+.art-modal.modal-open {
+    display: block;
+    /* removed overflow: hidden; so modal can scroll */
+}
+
+/* Make inner modal content scroll internally if needed */
+.art-modal-content {
+    position: relative;
+    background-color: #fff;
+    margin: 40px auto;
+    padding: 30px;
+    max-width: 800px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    /* Ensure content doesn't exceed viewport and can scroll */
+    max-height: calc(100vh - 80px);
+    overflow: auto;
+}
+
+/* When modal is open, prevent background/page from scrolling and preserve layout */
+body.opened-modal {
+    overflow: hidden;
+    /* padding-right is set dynamically by JS to match the missing scrollbar width */
+}
+
 /* 
 body.modal-open {
     overflow: hidden;
@@ -253,19 +282,7 @@ body.opened-modal .art-modal.modal-open {
     overflow: hidden;
 } */
 
-.art-modal-content {
-    position: relative;
-    background-color: #fff;
-    margin: 40px auto;
-    padding: 30px;
-    max-width: 800px;
-    border-radius: 12px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    /* pointer-events: all !important; */
-    /* pointer-events: auto; */
-}
-
-.modal-close {
+.art-showcase-modal-close {
     
     position: absolute;
     right: 20px;
@@ -282,7 +299,7 @@ body.opened-modal .art-modal.modal-open {
     
 }
 
-.modal-close:hover {
+.art-showcase-modal-close:hover {
     background-color: #f0f0f0;
 }
 

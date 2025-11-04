@@ -29,7 +29,7 @@
 .art-emotion-image {
     position: relative;
     width: 100%;
-    height: 200px;
+    height: 150px;
     overflow: hidden;
     /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
     display: flex;
@@ -118,7 +118,7 @@
     }
     
     .art-emotion-image {
-        height: 150px;
+        height: 100px;
     }
     
     .emotion-initial {
@@ -133,7 +133,7 @@
     }
     
     .art-emotion-image {
-        height: 200px;
+        height: 100px;
     }
 }
 
@@ -151,8 +151,8 @@
 }
 
 .art-emotions-grid.side-by-side .art-emotion-image {
-    width: 120px;
-    height: 120px;
+    width: 100px;
+    height: 100px;
     flex-shrink: 0;
 }
 

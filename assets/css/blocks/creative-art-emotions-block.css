@@ -53,8 +53,8 @@
 }
 
 .creative-emotion-large {
-    width: 260px; /* 200 */
-    height: 260px;
+    width: 210px; /* 200 */
+    height: 210px;
 }
 
 /* Desktop Positions (1200px+) */
@@ -125,8 +125,8 @@
     }
     
     .creative-emotion-large {
-        width: 220px;  /* 150 */
-        height: 220px;
+        width: 180px;  /* 150 */
+        height: 180px;
     }
     
     /* Add some creative offset to maintain artistic feel */
@@ -164,8 +164,8 @@
         left: auto !important;
         right: auto !important;
         bottom: auto !important;
-        width: 140px !important;
-        height: 140px !important;
+        width: 80px !important;
+        height: 80px !important;
         transform: none !important;
     }
     

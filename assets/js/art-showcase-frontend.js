@@ -9,10 +9,10 @@ jQuery(document).ready(function($) {
         
         // Calculate scroll amount (width of one item + gap)
         const getScrollAmount = () => {
-            const $firstItem = $grid.find('.art-showcase-item').first();
-            if ($firstItem.length) {
-                const itemWidth = $firstItem.outerWidth(true);
-                return itemWidth;
+            const $items = $grid.find('.art-showcase-item');
+            if ($items.length) {
+                const totalWidth = $items.toArray().reduce((acc, item) => acc + $(item).outerWidth(true), 0);
+                return totalWidth / $items.length; // Average width
             }
             return 280; // fallback
         };
@@ -65,8 +65,10 @@ jQuery(document).ready(function($) {
         updateNavButtons();
         
         // Update on window resize
+        let resizeTimeout;
         $(window).on('resize', function() {
-            updateNavButtons();
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(updateNavButtons, 100);
         });
         
         // Touch/swipe support for mobile
@@ -106,50 +108,74 @@ jQuery(document).ready(function($) {
             }
         });
 
-        // Modal functionality
-        $(document).on('click', '.art-showcase-item', function() {
-            const $modal = $(this).find('.art-modal');
-            const $wrapper = $(this).closest('.art-showcase-wrapper');
-            
-            // Add active states
-            $(this).addClass('modal-active');
-            $wrapper.addClass('has-open-modal');
-            
-            // Show modal
-            $modal.fadeIn().addClass('modal-open');
-            $('body').addClass('opened-modal');
-        });
-
-        function closeModal() {
-            const $modal = $('.art-modal.modal-open');
-            const $item = $modal.closest('.art-showcase-item');
-            const $wrapper = $modal.closest('.art-showcase-wrapper');
-            
-            // Remove active states
-            $item.removeClass('modal-active');
-            $wrapper.removeClass('has-open-modal');
-            
-            // Hide modal
-            $modal.fadeOut().removeClass('modal-open');
-            $('body').removeClass('opened-modal');
-        }
-
-        // Update existing close handlers to use closeModal()
-        $(document).on('click', '.modal-close', closeModal);
-
-        $(document).on('click', '.art-modal', function(e) {
-            if ($(e.target).hasClass('art-modal')) {
-                closeModal();
-            }
-        });
-
-        $(document).keyup(function(e) {
-            if (e.key === "Escape") {
-                closeModal();
-            }
-        });
         
         // Make wrapper focusable for keyboard navigation
         $wrapper.attr('tabindex', '0');
     });
+    // Modal functionality
+    $('.art-showcase-item').on('click', function() {
+        const $modal = $(this).find('.art-modal');
+        const $wrapper = $(this).closest('.art-showcase-wrapper');
+        
+        // Add active states
+        $(this).addClass('modal-active');
+        $wrapper.addClass('has-open-modal');
+        
+        // compute scrollbar width to avoid layout shift when hiding body scrollbar
+        const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+        if (scrollbarWidth > 0) {
+            $('body').css('padding-right', scrollbarWidth + 'px');
+        } else {
+            $('body').css('padding-right', '');
+        }
+
+        // Show modal and lock background scrolling
+        $modal.fadeIn().addClass('modal-open');
+        $('body').addClass('opened-modal');
+    });
+     // Prevent modal close when clicking modal content
+    $('.art-modal-content').on('click', function(e) {
+        e.stopPropagation();
+    });
+    // Close modal when clicking outside
+    $('.art-modal').on('click', function(e) {
+        if ($(e.target).hasClass('art-modal')) {
+            $(this).fadeOut();
+            $('body').removeClass('modal-open');
+        }
+    });
+
+    function closeModal() {
+        const $modal = $('.art-modal.modal-open');
+        const $item = $modal.closest('.art-showcase-item');
+        const $wrapper = $modal.closest('.art-showcase-wrapper');
+        
+        // Remove active states
+        $item.removeClass('modal-active');
+        $wrapper.removeClass('has-open-modal');
+        
+        // Hide modal
+        $modal.fadeOut().removeClass('modal-open');
+        $('body').removeClass('opened-modal');
+        // remove any padding-right added when opening modal
+        $('body').css('padding-right', '');
+    }
+
+    // Update existing close handlers to use closeModal()
+    // $(document).on('click', '.art-showcase-modal-close', closeModal);
+    $('.art-showcase-modal-close').on('click', closeModal);
+    
+
+    $('.art-modal').on('click', function(e) {
+        if ($(e.target).hasClass('art-modal')) {
+            closeModal();
+        }
+    });
+
+    $(document).keyup(function(e) {
+        if (e.key === "Escape") {
+            closeModal();
+        }
+    });
+        
 });
