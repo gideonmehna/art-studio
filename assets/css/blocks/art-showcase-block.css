@@ -16,12 +16,15 @@
 .art-showcase-wrapper {
     position: relative;
     display: flex;
+    flex-direction: column;
     align-items: center;
     gap: 15px;
 }
 
 .art-showcase-scroll {
-    flex: 1;
+    /* Keep the scroll area full width so the slider can use the available space */
+    flex: none;
+    width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
     scroll-behavior: smooth;
@@ -167,12 +170,19 @@
     height: 24px;
 }
 
-.art-showcase-nav-left {
-    order: -1;
+/* Reset left/right ordering because navs are grouped into a single row now */
+.art-showcase-nav-left,
+.art-showcase-nav-right {
+    order: initial;
 }
 
-.art-showcase-nav-right {
-    order: 1;
+/* New nav row below the scroll area */
+.art-showcase-nav-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+    margin-top: 18px;
 }
 
 /* Empty state */
