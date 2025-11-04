@@ -425,21 +425,21 @@ add_action('init', 'register_art_emotion_featured_image_meta');
 function add_art_emotion_featured_image_field()
 {
     ?>
-            <div class="form-field">
-                <label for="art_emotion_featured_image"><?php _e('Featured Image', 'art-studio'); ?></label>
-                <div id="art_emotion_featured_image_container">
-                    <input type="hidden" id="art_emotion_featured_image" name="featured_image" value="" />
-                    <div id="art_emotion_featured_image_preview" style="margin-bottom: 10px;"></div>
-                    <button type="button" class="button" id="art_emotion_featured_image_button">
-                        <?php _e('Select Featured Image', 'art-studio'); ?>
-                    </button>
-                    <button type="button" class="button" id="art_emotion_remove_featured_image_button" style="display: none;">
-                        <?php _e('Remove Featured Image', 'art-studio'); ?>
-                    </button>
-                </div>
-                <p class="description"><?php _e('Choose a featured image for this art emotion. This will also be available in the Gutenberg editor.', 'art-studio'); ?></p>
-            </div>
-            <?php
+                    <div class="form-field">
+                        <label for="art_emotion_featured_image"><?php _e('Featured Image', 'art-studio'); ?></label>
+                        <div id="art_emotion_featured_image_container">
+                            <input type="hidden" id="art_emotion_featured_image" name="featured_image" value="" />
+                            <div id="art_emotion_featured_image_preview" style="margin-bottom: 10px;"></div>
+                            <button type="button" class="button" id="art_emotion_featured_image_button">
+                                <?php _e('Select Featured Image', 'art-studio'); ?>
+                            </button>
+                            <button type="button" class="button" id="art_emotion_remove_featured_image_button" style="display: none;">
+                                <?php _e('Remove Featured Image', 'art-studio'); ?>
+                            </button>
+                        </div>
+                        <p class="description"><?php _e('Choose a featured image for this art emotion. This will also be available in the Gutenberg editor.', 'art-studio'); ?></p>
+                    </div>
+                    <?php
 }
 add_action('art_emotion_add_form_fields', 'add_art_emotion_featured_image_field');
 
@@ -454,29 +454,29 @@ function edit_art_emotion_featured_image_field($term)
         $featured_image_url = wp_get_attachment_image_url($featured_image_id, 'thumbnail');
     }
     ?>
-            <tr class="form-field">
-                <th scope="row" valign="top">
-                    <label for="art_emotion_featured_image"><?php _e('Featured Image', 'art-studio'); ?></label>
-                </th>
-                <td>
-                    <div id="art_emotion_featured_image_container">
-                        <input type="hidden" id="art_emotion_featured_image" name="featured_image" value="<?php echo esc_attr($featured_image_id); ?>" />
-                        <div id="art_emotion_featured_image_preview" style="margin-bottom: 10px;">
-                            <?php if ($featured_image_url): ?>
-                                        <img src="<?php echo esc_url($featured_image_url); ?>" style="max-width: 150px; height: auto;" />
-                            <?php endif; ?>
-                        </div>
-                        <button type="button" class="button" id="art_emotion_featured_image_button">
-                            <?php _e($featured_image_id ? 'Change Featured Image' : 'Select Featured Image', 'art-studio'); ?>
-                        </button>
-                        <button type="button" class="button" id="art_emotion_remove_featured_image_button" <?php echo $featured_image_id ? '' : 'style="display: none;"'; ?>>
-                            <?php _e('Remove Featured Image', 'art-studio'); ?>
-                        </button>
-                    </div>
-                    <p class="description"><?php _e('Choose a featured image for this art emotion. This will also be available in the Gutenberg editor.', 'art-studio'); ?></p>
-                </td>
-            </tr>
-            <?php
+                    <tr class="form-field">
+                        <th scope="row" valign="top">
+                            <label for="art_emotion_featured_image"><?php _e('Featured Image', 'art-studio'); ?></label>
+                        </th>
+                        <td>
+                            <div id="art_emotion_featured_image_container">
+                                <input type="hidden" id="art_emotion_featured_image" name="featured_image" value="<?php echo esc_attr($featured_image_id); ?>" />
+                                <div id="art_emotion_featured_image_preview" style="margin-bottom: 10px;">
+                                    <?php if ($featured_image_url): ?>
+                                                        <img src="<?php echo esc_url($featured_image_url); ?>" style="max-width: 150px; height: auto;" />
+                                    <?php endif; ?>
+                                </div>
+                                <button type="button" class="button" id="art_emotion_featured_image_button">
+                                    <?php _e($featured_image_id ? 'Change Featured Image' : 'Select Featured Image', 'art-studio'); ?>
+                                </button>
+                                <button type="button" class="button" id="art_emotion_remove_featured_image_button" <?php echo $featured_image_id ? '' : 'style="display: none;"'; ?>>
+                                    <?php _e('Remove Featured Image', 'art-studio'); ?>
+                                </button>
+                            </div>
+                            <p class="description"><?php _e('Choose a featured image for this art emotion. This will also be available in the Gutenberg editor.', 'art-studio'); ?></p>
+                        </td>
+                    </tr>
+                    <?php
 }
 add_action('art_emotion_edit_form_fields', 'edit_art_emotion_featured_image_field');
 
@@ -653,14 +653,14 @@ add_action('rest_api_init', 'register_art_emotion_rest_fields');
 function add_art_emotion_custom_link_field()
 {
     ?>
-            <div class="form-field">
-                <label for="custom_link"><?php _e('Custom Link', 'art-studio'); ?></label>
-                <input type="url" name="custom_link" id="custom_link" value="" />
-                <p class="description">
-                    <?php _e('Enter a custom URL for this emotion (e.g., /gallery#happy). Leave empty to use default archive page.', 'art-studio'); ?>
-                </p>
-            </div>
-            <?php
+                    <div class="form-field">
+                        <label for="custom_link"><?php _e('Custom Link', 'art-studio'); ?></label>
+                        <input type="url" name="custom_link" id="custom_link" value="" />
+                        <p class="description">
+                            <?php _e('Enter a custom URL for this emotion (e.g., /gallery#happy). Leave empty to use default archive page.', 'art-studio'); ?>
+                        </p>
+                    </div>
+                    <?php
 }
 add_action('art_emotion_add_form_fields', 'add_art_emotion_custom_link_field');
 
@@ -671,18 +671,18 @@ function edit_art_emotion_custom_link_field($term)
 {
     $custom_link = get_term_meta($term->term_id, 'custom_link', true);
     ?>
-            <tr class="form-field">
-                <th scope="row">
-                    <label for="custom_link"><?php _e('Custom Link', 'art-studio'); ?></label>
-                </th>
-                <td>
-                    <input type="url" name="custom_link" id="custom_link" value="<?php echo esc_attr($custom_link); ?>" />
-                    <p class="description">
-                        <?php _e('Enter a custom URL for this emotion (e.g., /gallery#happy)', 'art-studio'); ?>
-                    </p>
-                </td>
-            </tr>
-            <?php
+                    <tr class="form-field">
+                        <th scope="row">
+                            <label for="custom_link"><?php _e('Custom Link', 'art-studio'); ?></label>
+                        </th>
+                        <td>
+                            <input type="url" name="custom_link" id="custom_link" value="<?php echo esc_attr($custom_link); ?>" />
+                            <p class="description">
+                                <?php _e('Enter a custom URL for this emotion (e.g., /gallery#happy)', 'art-studio'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    <?php
 }
 add_action('art_emotion_edit_form_fields', 'edit_art_emotion_custom_link_field');
 
@@ -764,8 +764,6 @@ add_filter('block_categories_all', 'add_art_blocks_category');
 // Define an array of form IDs instead of individual constants
 define('ART_SUBMISSION_FORM_IDS', [259, 358]);
 
-add_action('forminator_form_after_handle', 'create_artwork_post_from_forminator', 10, 3);
-add_action('forminator_form_after_handle_submit', 'create_artwork_post_from_forminator', 10, 3);
 add_action('forminator_form_after_save_entry', 'create_artwork_post_from_forminator', 10, 3);
 
 
@@ -859,80 +857,169 @@ function create_artwork_post_from_forminator($form_id, $response, $form_fields =
         }
     }
 
+
+    // ...existing code...
     error_log('Art Studio: Raw FILES data: ' . print_r($_FILES, true));
-    // Handle Forminator's uploaded file
-    if (!empty($_FILES['upload-1']) && $_FILES['upload-1']['error'] === 0) {
-        error_log('Art Studio: Processing uploaded file from Forminator');
 
-        // Required WordPress files
-        require_once(ABSPATH . 'wp-admin/includes/media.php');
-        require_once(ABSPATH . 'wp-admin/includes/file.php');
-        require_once(ABSPATH . 'wp-admin/includes/image.php');
+    // --- START robust upload handler ---
+    $attachment_id = false;
+    $upload_field = 'upload-1';
+    require_once(ABSPATH . 'wp-admin/includes/file.php');
+    require_once(ABSPATH . 'wp-admin/includes/image.php');
+    require_once(ABSPATH . 'wp-admin/includes/media.php');
 
-        // Get WordPress upload directory info
-        $wp_upload_dir = wp_upload_dir();
+    // 1) Fast path: use media_handle_upload() if present in current request
+    if (!empty($_FILES[$upload_field]) && empty($_FILES[$upload_field]['error'])) {
+        error_log('Art Studio: Attempting media_handle_upload for ' . $upload_field);
+        $attach_try = media_handle_upload($upload_field, $post_id);
+        if (!is_wp_error($attach_try)) {
+            $attachment_id = $attach_try;
+            error_log("Art Studio: media_handle_upload succeeded, attachment ID {$attachment_id}");
+        } else {
+            error_log('Art Studio: media_handle_upload failed - ' . $attach_try->get_error_message());
+            // mark for fallback
+            $upload_error_msg = $attach_try->get_error_message();
+        }
+    } else {
+        error_log('Art Studio: No $_FILES entry or upload error for ' . $upload_field);
+    }
 
-        // Construct Forminator's upload path
-        $forminator_upload_base = $wp_upload_dir['basedir'] . '/forminator';
+    // 2) Fallback A: Try to get Forminator saved file URL from entry (preferred deterministic source)
+    if (!$attachment_id) {
+        error_log('Art Studio: Attempting to obtain Forminator file URL from entry data');
 
-        // Get form submission folder (most recent folder for this form)
-        $form_folders = glob($forminator_upload_base . '/' . $form_id . '_*', GLOB_ONLYDIR);
-        if (!empty($form_folders)) {
-            $latest_folder = end($form_folders);
-            $uploads_folder = $latest_folder . '/uploads';
+        $file_url = null;
+        // Try to get entry id from $response (common keys)
+        $entry_id = null;
+        if (is_array($response)) {
+            if (!empty($response['entry_id'])) {
+                $entry_id = $response['entry_id'];
+            } elseif (!empty($response['entry'])) {
+                $entry_id = $response['entry'];
+            }
+        }
 
-            // Get the uploaded file from the uploads folder
-            $files = glob($uploads_folder . '/*');
-            if (!empty($files)) {
-                $latest_file = end($files);
-
-                error_log('Art Studio: Found Forminator file at: ' . $latest_file);
-
-                if (file_exists($latest_file)) {
-                    // Prepare file data for sideload
-                    $file_array = array(
-                        'name' => basename($latest_file),
-                        'tmp_name' => $latest_file,
-                        'type' => mime_content_type($latest_file),
-                        'size' => filesize($latest_file),
-                        'error' => 0
-                    );
-
-                    // Copy file to media library using sideload
-                    $attachment_id = media_handle_sideload($file_array, $post_id);
-
-                    if (!is_wp_error($attachment_id)) {
-                        set_post_thumbnail($post_id, $attachment_id);
-                        error_log("Art Studio: Successfully set featured image with ID - {$attachment_id}");
-                    } else {
-                        error_log("Art Studio: Failed to create attachment - " . $attachment_id->get_error_message());
-                    }
-                } else {
-                    error_log("Art Studio: File not found at path: " . $latest_file);
+        // If we didn't get entry id from $response, try form_fields or POST (best-effort)
+        if (empty($entry_id) && is_array($form_fields) && !empty($form_fields)) {
+            // sometimes the entry id is included in fields or meta; attempt to find it
+            foreach ($form_fields as $ff) {
+                if (is_array($ff) && !empty($ff['entry_id'])) {
+                    $entry_id = $ff['entry_id'];
+                    break;
                 }
-            } else {
-                error_log("Art Studio: No files found in uploads folder: " . $uploads_folder);
+            }
+        }
+
+        // Use Forminator API if available and entry id known
+        if (!empty($entry_id) && class_exists('Forminator_Form_Entry_Model')) {
+            try {
+                $entry_obj = Forminator_Form_Entry_Model::find((int) $entry_id);
+                if ($entry_obj) {
+                    $entry_fields = $entry_obj->get_fields();
+                    error_log('Art Studio: Retrieved entry fields from Forminator: ' . print_r($entry_fields, true));
+                    // Look for file-type fields or a field whose value is a URL containing "/forminator/"
+                    foreach ($entry_fields as $ef) {
+                        if (is_array($ef) && !empty($ef['type']) && $ef['type'] === 'file' && !empty($ef['value'])) {
+                            // value may be URL or array of urls
+                            if (is_array($ef['value'])) {
+                                // pick first URL
+                                $file_url = reset($ef['value']);
+                            } else {
+                                $file_url = $ef['value'];
+                            }
+                            break;
+                        }
+                        // fallback: sometimes field value is plain URL stored as 'value'
+                        if (is_array($ef) && !empty($ef['value']) && is_string($ef['value']) && strpos($ef['value'], '/uploads/forminator/') !== false) {
+                            $file_url = $ef['value'];
+                            break;
+                        }
+                    }
+                }
+            } catch (Throwable $e) {
+                error_log('Art Studio: Exception retrieving Forminator entry - ' . $e->getMessage());
             }
         } else {
-            error_log("Art Studio: No form submission folders found in: " . $forminator_upload_base);
+            error_log('Art Studio: No valid Forminator entry id available for lookup. Response keys: ' . print_r(array_keys((array) $response), true));
+        }
+
+        // If we have a URL from Forminator entry, download and sideload it
+        if (!empty($file_url)) {
+            error_log('Art Studio: Found Forminator file URL: ' . $file_url);
+            $tmp_file = download_url($file_url);
+            if (is_wp_error($tmp_file)) {
+                error_log('Art Studio: download_url failed - ' . $tmp_file->get_error_message());
+            } else {
+                $file_array = array(
+                    'name' => basename($file_url),
+                    'tmp_name' => $tmp_file,
+                );
+                $attach_id = media_handle_sideload($file_array, $post_id);
+                if (is_wp_error($attach_id)) {
+                    error_log('Art Studio: media_handle_sideload failed with Forminator URL - ' . $attach_id->get_error_message());
+                    @unlink($tmp_file);
+                } else {
+                    $attachment_id = $attach_id;
+                    error_log("Art Studio: media_handle_sideload succeeded from Forminator URL, attachment ID {$attachment_id}");
+                }
+            }
+        } else {
+            error_log('Art Studio: No file URL discovered in Forminator entry data.');
         }
     }
 
-    // // Handle image upload
-    // if (!empty($_FILES['upload-1']) && $_FILES['upload-1']['error'] === 0) {
-    //     require_once(ABSPATH . 'wp-admin/includes/file.php');
-    //     require_once(ABSPATH . 'wp-admin/includes/image.php');
-    //     require_once(ABSPATH . 'wp-admin/includes/media.php');
+    // 3) Fallback B: Search Forminator upload folders for a file that matches original filename
+    if (!$attachment_id && !empty($_FILES[$upload_field]['name'])) {
+        $original_basename = sanitize_file_name($_FILES[$upload_field]['name']);
+        $uploads = wp_upload_dir();
+        $forminator_base = trailingslashit($uploads['basedir']) . 'forminator';
+        error_log('Art Studio: Searching Forminator folders for file: ' . $original_basename . ' in ' . $forminator_base);
 
-    //     $attachment_id = media_handle_upload('upload-1', $post_id);
+        if (is_dir($forminator_base)) {
+            $matches = glob($forminator_base . "/*/uploads/*" . $original_basename, GLOB_NOSORT);
+            if (!empty($matches)) {
+                // pick the first match (deterministic)
+                $found_path = $matches[0];
+                error_log('Art Studio: Found candidate file at: ' . $found_path);
+                // Prepare a temp copy for sideload
+                $tmp_path = wp_tempnam($found_path);
+                if ($tmp_path && copy($found_path, $tmp_path)) {
+                    $file_array = array(
+                        'name' => basename($found_path),
+                        'tmp_name' => $tmp_path,
+                    );
+                    $attach_id = media_handle_sideload($file_array, $post_id);
+                    if (is_wp_error($attach_id)) {
+                        error_log('Art Studio: media_handle_sideload failed for found file - ' . $attach_id->get_error_message());
+                        @unlink($tmp_path);
+                    } else {
+                        $attachment_id = $attach_id;
+                        error_log("Art Studio: media_handle_sideload succeeded from Forminator folder, attachment ID {$attachment_id}");
+                    }
+                } else {
+                    error_log('Art Studio: Failed to copy candidate file to temp for sideload.');
+                }
+            } else {
+                error_log('Art Studio: No matching file found in Forminator folders for ' . $original_basename);
+            }
+        } else {
+            error_log('Art Studio: Forminator upload base not found: ' . $forminator_base);
+        }
+    }
 
-    //     if (!is_wp_error($attachment_id)) {
-    //         set_post_thumbnail($post_id, $attachment_id);
-    //         error_log("Art Studio: Image uploaded with ID - {$attachment_id}");
-    //     } else {
-    //         error_log("Art Studio: Image upload failed - " . $attachment_id->get_error_message());
-    //     }
-    // }
+    // Finalize: set featured image if we have a valid attachment
+    if ($attachment_id && !is_wp_error($attachment_id)) {
+        $set_res = set_post_thumbnail($post_id, $attachment_id);
+        if ($set_res) {
+            error_log("Art Studio: Successfully set featured image with ID - {$attachment_id}");
+        } else {
+            error_log("Art Studio: set_post_thumbnail failed for attachment ID - {$attachment_id}");
+        }
+    } else {
+        error_log('Art Studio: No attachment created; skipping featured image. Last upload error: ' . ($upload_error_msg ?? 'none'));
+    }
+    // --- END robust upload handler ---
+// ...existing code...
 
     // Send notification
     // $admin_email = get_option('admin_email');
