@@ -7,6 +7,11 @@ jQuery(document).ready(function($) {
         age_max: ''
     };
     let isLoading = false;
+
+    // Read the permanent block-level category set by the editor (e.g. 'pro', 'general', or '').
+    // This is never shown to the user — it scopes the gallery to a specific category.
+    const galleryContainer = document.querySelector('.art-gallery-container');
+    const blockCategory = galleryContainer ? (galleryContainer.getAttribute('data-category') || '') : '';
     
     // Filter toggle functionality
     $('.filter-toggle').on('click', function() {
@@ -100,7 +105,7 @@ jQuery(document).ready(function($) {
             type: 'POST',
             data: {
                 action: 'art_studio_filter_art',
-                filters: currentFilters,
+                filters: Object.assign({}, currentFilters, { art_category: blockCategory }),
                 nonce: artGalleryAjax.nonce
             },
             success: function(response) {
@@ -143,7 +148,7 @@ jQuery(document).ready(function($) {
             data: {
                 action: 'art_studio_load_more_art',
                 page: currentPage,
-                filters: currentFilters,
+                filters: Object.assign({}, currentFilters, { art_category: blockCategory }),
                 nonce: artGalleryAjax.nonce
             },
             success: function(response) {

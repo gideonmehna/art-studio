@@ -108,7 +108,7 @@ function register_art_pieces_post_type()
         'description' => __('Art pieces created by children', 'art-studio'),
         'labels' => $labels,
         'supports' => array('title', 'editor', 'thumbnail', 'custom-fields'),
-        'taxonomies' => array('art_emotion'),
+        'taxonomies' => array('art_emotion', 'art_category'),
         'hierarchical' => false,
         'public' => true,
         'show_ui' => true,
@@ -177,6 +177,42 @@ function register_art_emotion_taxonomy()
     register_taxonomy('art_emotion', array('art_piece'), $args);
 }
 add_action('init', 'register_art_emotion_taxonomy', 0);
+
+/**
+ * Register Custom Taxonomy for Art Categories (e.g. General, Pro)
+ */
+function register_art_category_taxonomy()
+{
+    $labels = array(
+        'name'          => _x('Art Categories', 'Taxonomy General Name', 'art-studio'),
+        'singular_name' => _x('Art Category', 'Taxonomy Singular Name', 'art-studio'),
+        'menu_name'     => __('Art Categories', 'art-studio'),
+        'all_items'     => __('All Art Categories', 'art-studio'),
+        'new_item_name' => __('New Art Category Name', 'art-studio'),
+        'add_new_item'  => __('Add New Art Category', 'art-studio'),
+        'edit_item'     => __('Edit Art Category', 'art-studio'),
+        'update_item'   => __('Update Art Category', 'art-studio'),
+        'search_items'  => __('Search Art Categories', 'art-studio'),
+        'not_found'     => __('Not Found', 'art-studio'),
+        'no_terms'      => __('No art categories', 'art-studio'),
+    );
+
+    $args = array(
+        'labels'            => $labels,
+        'hierarchical'      => true,
+        'public'            => false,      // No public archive URLs
+        'show_ui'           => true,       // Visible in admin
+        'show_admin_column' => true,       // Column on Art Pieces list
+        'show_in_nav_menus' => false,
+        'show_tagcloud'     => false,
+        'show_in_rest'      => true,       // Required for block editor SelectControl
+        'rest_base'         => 'art-categories',
+        'rewrite'           => false,
+    );
+
+    register_taxonomy('art_category', array('art_piece'), $args);
+}
+add_action('init', 'register_art_category_taxonomy', 0);
 
 
 /**
@@ -350,6 +386,22 @@ function add_art_piece_admin_filters()
             }
             echo '</select>';
         }
+
+        // Category filter
+        $selected_category = isset($_GET['art_category']) ? $_GET['art_category'] : '';
+        $categories = get_terms(array(
+            'taxonomy'   => 'art_category',
+            'hide_empty' => false,
+        ));
+
+        if ($categories && !is_wp_error($categories)) {
+            echo '<select name="art_category">';
+            echo '<option value="">' . __('All Categories', 'art-studio') . '</option>';
+            foreach ($categories as $category) {
+                echo '<option value="' . esc_attr($category->slug) . '"' . selected($selected_category, $category->slug, false) . '>' . esc_html($category->name) . '</option>';
+            }
+            echo '</select>';
+        }
     }
 }
 add_action('restrict_manage_posts', 'add_art_piece_admin_filters');
@@ -372,6 +424,11 @@ function handle_art_piece_admin_filtering($query)
         if (isset($_GET['art_emotion']) && $_GET['art_emotion'] !== '') {
             $query->set('art_emotion', $_GET['art_emotion']);
         }
+
+        // Category filter
+        if (isset($_GET['art_category']) && $_GET['art_category'] !== '') {
+            $query->set('art_category', sanitize_text_field($_GET['art_category']));
+        }
     }
 }
 add_action('pre_get_posts', 'handle_art_piece_admin_filtering');
@@ -383,6 +440,7 @@ function art_studio_activate()
 {
     register_art_pieces_post_type();
     register_art_emotion_taxonomy();
+    register_art_category_taxonomy();
     // Initialize custom menu assets
     // art_studio_menu_activate();
     flush_rewrite_rules();
@@ -758,12 +816,6 @@ add_filter('block_categories_all', 'add_art_blocks_category');
 /**
  * Handle Forminator form submission to create an art piece post
  */
-// define('ART_SUBMISSION_FORM_ID', 259); 
-// Your Forminator form ID
-
-// Define an array of form IDs instead of individual constants
-define('ART_SUBMISSION_FORM_IDS', [259, 358]);
-
 add_action('forminator_form_after_save_entry', 'create_artwork_post_from_forminator', 10, 3);
 
 
@@ -773,11 +825,18 @@ function create_artwork_post_from_forminator($form_id, $response, $form_fields =
     error_log('Art Studio: Form ID - ' . $form_id);
     error_log('Art Studio: Response - ' . print_r($response, true));
     error_log('Art Studio: Form Fields - ' . print_r($form_fields, true));
-    // if ($form_id != 259) return; 
-    if (!in_array($form_id, ART_SUBMISSION_FORM_IDS)) {
+
+    // Load the admin-configured form → category mapping from the database
+    $form_map = get_option('art_studio_form_category_map', array());
+    $active_form_ids = array_keys($form_map);
+
+    if (empty($active_form_ids) || !in_array($form_id, $active_form_ids)) {
+        error_log('Art Studio: Form ID ' . $form_id . ' is not mapped — skipping.');
         return;
     }
-    // Only run for the correct form
+
+    // Determine the art_category to assign based on the form ID
+    $assigned_category = !empty($form_map[$form_id]) ? $form_map[$form_id] : '';
 
     error_log('Art Studio: Raw POST data: ' . print_r($_POST, true));
     error_log('Art Studio: Raw FILES data: ' . print_r($_FILES, true));
@@ -824,6 +883,16 @@ function create_artwork_post_from_forminator($form_id, $response, $form_fields =
     }
 
     error_log("Art Studio: Successfully created post with ID - {$post_id}");
+
+    // Auto-assign art_category based on which form was submitted
+    if (!empty($assigned_category)) {
+        $cat_result = wp_set_object_terms($post_id, $assigned_category, 'art_category');
+        if (is_wp_error($cat_result)) {
+            error_log('Art Studio: Failed to set art_category - ' . $cat_result->get_error_message());
+        } else {
+            error_log('Art Studio: Set art_category to "' . $assigned_category . '" for post ' . $post_id);
+        }
+    }
 
     // Set taxonomy terms and tags
     if (!empty($data['artwork_emotion'])) {
@@ -1004,3 +1073,250 @@ function init_art_studio_custom_menu()
     error_log('Art Studio: Custom menu initialized');
 }
 add_action('after_setup_theme', 'init_art_studio_custom_menu', 5);
+
+
+/**
+ * =========================================================
+ * Form → Category Mapping Settings
+ * Admin page: Art Pieces → Form Settings
+ * =========================================================
+ */
+
+/**
+ * Register the Form Settings submenu under Art Pieces
+ */
+function art_studio_register_form_settings_page()
+{
+    add_submenu_page(
+        'edit.php?post_type=art_piece',
+        __('Form Settings', 'art-studio'),
+        __('Form Settings', 'art-studio'),
+        'manage_options',
+        'art-studio-form-settings',
+        'art_studio_form_settings_page'
+    );
+}
+add_action('admin_menu', 'art_studio_register_form_settings_page');
+
+
+/**
+ * AJAX handler: save the form → category map
+ */
+function art_studio_save_form_map()
+{
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'art_studio_form_map_nonce')) {
+        wp_send_json_error('Security check failed');
+    }
+
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error('Insufficient permissions');
+    }
+
+    $raw = isset($_POST['form_map']) ? json_decode(stripslashes($_POST['form_map']), true) : array();
+    $map = array();
+
+    if (is_array($raw)) {
+        foreach ($raw as $entry) {
+            $form_id  = absint($entry['form_id'] ?? 0);
+            $category = sanitize_text_field($entry['category'] ?? '');
+            if ($form_id > 0 && !empty($category)) {
+                $map[$form_id] = $category;
+            }
+        }
+    }
+
+    update_option('art_studio_form_category_map', $map);
+    wp_send_json_success(__('Mappings saved successfully.', 'art-studio'));
+}
+add_action('wp_ajax_art_studio_save_form_map', 'art_studio_save_form_map');
+
+
+/**
+ * Admin page callback: render the Form → Category mapping UI
+ */
+function art_studio_form_settings_page()
+{
+    if (!current_user_can('manage_options')) {
+        return;
+    }
+
+    // Ensure option row exists
+    if (false === get_option('art_studio_form_category_map')) {
+        update_option('art_studio_form_category_map', array());
+    }
+
+    $current_map = get_option('art_studio_form_category_map', array());
+
+    // Fetch Forminator forms
+    $forminator_forms = array();
+    if (class_exists('Forminator_API')) {
+        $result = Forminator_API::get_forms(null, 1, 200, 'publish');
+        if (is_array($result)) {
+            $forminator_forms = $result;
+        }
+    }
+
+    // Fetch art_category terms
+    $categories = get_terms(array(
+        'taxonomy'   => 'art_category',
+        'hide_empty' => false,
+    ));
+    if (is_wp_error($categories)) {
+        $categories = array();
+    }
+
+    // Build select HTML snippets to reuse in PHP and inject into JS template
+    $form_options_html = '<option value="">' . esc_html__('— Select a Form —', 'art-studio') . '</option>';
+    foreach ($forminator_forms as $form) {
+        $form_options_html .= sprintf(
+            '<option value="%d">%s (ID: %d)</option>',
+            absint($form->id),
+            esc_html(get_the_title($form->id)),
+            absint($form->id)
+        );
+    }
+
+    $cat_options_html = '<option value="">' . esc_html__('— Select a Category —', 'art-studio') . '</option>';
+    foreach ($categories as $cat) {
+        $cat_options_html .= sprintf(
+            '<option value="%s">%s</option>',
+            esc_attr($cat->slug),
+            esc_html($cat->name)
+        );
+    }
+
+    ?>
+    <div class="wrap">
+        <h1><?php esc_html_e('Form → Category Mappings', 'art-studio'); ?></h1>
+        <p><?php esc_html_e('Associate each Forminator form with an Art Category. When a form is submitted, the created art piece will automatically receive the mapped category.', 'art-studio'); ?></p>
+
+        <?php if (empty($forminator_forms)): ?>
+            <div class="notice notice-warning">
+                <p><?php esc_html_e('Forminator is not active or has no published forms. Activate Forminator and create at least one form to use this feature.', 'art-studio'); ?></p>
+            </div>
+        <?php endif; ?>
+
+        <?php if (empty($categories)): ?>
+            <div class="notice notice-warning">
+                <p>
+                    <?php esc_html_e('No Art Categories found.', 'art-studio'); ?>
+                    <a href="<?php echo esc_url(admin_url('edit-tags.php?taxonomy=art_category&post_type=art_piece')); ?>">
+                        <?php esc_html_e('Create categories here.', 'art-studio'); ?>
+                    </a>
+                </p>
+            </div>
+        <?php endif; ?>
+
+        <table id="art-studio-form-map-table" style="border-collapse:collapse;width:100%;max-width:700px;">
+            <thead>
+                <tr>
+                    <th style="text-align:left;padding:8px 12px;border-bottom:1px solid #ddd;"><?php esc_html_e('Forminator Form', 'art-studio'); ?></th>
+                    <th style="text-align:left;padding:8px 12px;border-bottom:1px solid #ddd;"><?php esc_html_e('Art Category', 'art-studio'); ?></th>
+                    <th style="padding:8px 12px;border-bottom:1px solid #ddd;"></th>
+                </tr>
+            </thead>
+            <tbody id="art-studio-form-map-rows">
+                <?php foreach ($current_map as $form_id => $cat_slug): ?>
+                <tr class="form-map-row">
+                    <td style="padding:8px 12px;">
+                        <select name="form_id" style="width:100%;">
+                            <?php
+                            foreach ($forminator_forms as $form) {
+                                printf(
+                                    '<option value="%d"%s>%s (ID: %d)</option>',
+                                    absint($form->id),
+                                    selected(absint($form_id), absint($form->id), false),
+                                    esc_html(get_the_title($form->id)),
+                                    absint($form->id)
+                                );
+                            }
+                            ?>
+                        </select>
+                    </td>
+                    <td style="padding:8px 12px;">
+                        <select name="category" style="width:100%;">
+                            <?php
+                            foreach ($categories as $cat) {
+                                printf(
+                                    '<option value="%s"%s>%s</option>',
+                                    esc_attr($cat->slug),
+                                    selected($cat_slug, $cat->slug, false),
+                                    esc_html($cat->name)
+                                );
+                            }
+                            ?>
+                        </select>
+                    </td>
+                    <td style="padding:8px 12px;">
+                        <button type="button" class="button remove-row" style="color:#b32d2e;">✕ <?php esc_html_e('Remove', 'art-studio'); ?></button>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+
+        <p style="margin-top:16px;">
+            <button type="button" id="add-form-map-row" class="button">+ <?php esc_html_e('Add Mapping', 'art-studio'); ?></button>
+            &nbsp;&nbsp;
+            <button type="button" id="save-form-map" class="button button-primary"><?php esc_html_e('Save Mappings', 'art-studio'); ?></button>
+            <span id="form-map-save-status" style="margin-left:12px;"></span>
+        </p>
+    </div>
+
+    <script>
+    (function($) {
+        var config = <?php echo wp_json_encode(array(
+            'ajaxUrl'     => admin_url('admin-ajax.php'),
+            'nonce'       => wp_create_nonce('art_studio_form_map_nonce'),
+            'formOptions' => $form_options_html,
+            'catOptions'  => $cat_options_html,
+        )); ?>;
+
+        function buildNewRow() {
+            return $('<tr class="form-map-row">' +
+                '<td style="padding:8px 12px;"><select name="form_id" style="width:100%;">' + config.formOptions + '</select></td>' +
+                '<td style="padding:8px 12px;"><select name="category" style="width:100%;">' + config.catOptions + '</select></td>' +
+                '<td style="padding:8px 12px;"><button type="button" class="button remove-row" style="color:#b32d2e;">✕ <?php esc_js(__('Remove', 'art-studio')); ?></button></td>' +
+            '</tr>');
+        }
+
+        $('#add-form-map-row').on('click', function() {
+            $('#art-studio-form-map-rows').append(buildNewRow());
+        });
+
+        $(document).on('click', '.remove-row', function() {
+            $(this).closest('tr').remove();
+        });
+
+        $('#save-form-map').on('click', function() {
+            var $status = $('#form-map-save-status');
+            var rows = [];
+
+            $('#art-studio-form-map-rows .form-map-row').each(function() {
+                var formId   = $(this).find('select[name="form_id"]').val();
+                var category = $(this).find('select[name="category"]').val();
+                if (formId && category) {
+                    rows.push({ form_id: formId, category: category });
+                }
+            });
+
+            $status.text('<?php esc_js(__('Saving…', 'art-studio')); ?>').css('color', '#666');
+
+            $.post(config.ajaxUrl, {
+                action:   'art_studio_save_form_map',
+                nonce:    config.nonce,
+                form_map: JSON.stringify(rows)
+            }, function(response) {
+                if (response.success) {
+                    $status.text(response.data).css('color', 'green');
+                } else {
+                    $status.text(response.data || '<?php esc_js(__('Error saving.', 'art-studio')); ?>').css('color', 'red');
+                }
+            }).fail(function() {
+                $status.text('<?php esc_js(__('Server error.', 'art-studio')); ?>').css('color', 'red');
+            });
+        });
+    })(jQuery);
+    </script>
+    <?php
+}

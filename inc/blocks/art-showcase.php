@@ -22,7 +22,7 @@ function art_studio_register_showcase_block()
     wp_register_script(
         'art-showcase-block-editor',
         ART_STUDIO_PLUGIN_URL . 'assets/js/art-showcase-block.js',
-        array('wp-blocks', 'wp-element', 'wp-editor'),
+        array('wp-blocks', 'wp-element', 'wp-editor', 'wp-api-fetch'),
         ART_STUDIO_VERSION
     );
 
@@ -58,7 +58,11 @@ function art_studio_register_showcase_block()
             'title' => array(
                 'type' => 'string',
                 'default' => __('Featured Artwork', 'art-studio')
-            )
+            ),
+            'artCategory' => array(
+                'type'    => 'string',
+                'default' => ''
+            ),
         )
     ));
 }
@@ -72,15 +76,29 @@ function art_studio_render_showcase_block($attributes)
     $number_of_items = isset($attributes['numberOfItems']) ? intval($attributes['numberOfItems']) : 8;
     $show_title = isset($attributes['showTitle']) ? $attributes['showTitle'] : true;
     $title = isset($attributes['title']) ? $attributes['title'] : __('Featured Artwork', 'art-studio');
+    $art_category = isset($attributes['artCategory']) ? sanitize_text_field($attributes['artCategory']) : '';
+
+    // Build query — optionally scope to a specific art_category
+    $query_args = array(
+        'post_type'      => 'art_piece',
+        'posts_per_page' => $number_of_items,
+        'post_status'    => 'publish',
+        'orderby'        => 'date',
+        'order'          => 'DESC',
+    );
+
+    if (!empty($art_category)) {
+        $query_args['tax_query'] = array(
+            array(
+                'taxonomy' => 'art_category',
+                'field'    => 'slug',
+                'terms'    => $art_category,
+            ),
+        );
+    }
 
     // Get art pieces
-    $art_pieces = get_posts(array(
-        'post_type' => 'art_piece',
-        'posts_per_page' => $number_of_items,
-        'post_status' => 'publish',
-        'orderby' => 'date',
-        'order' => 'DESC'
-    ));
+    $art_pieces = get_posts($query_args);
 
     if (empty($art_pieces)) {
         return '<div class="art-showcase-empty">' . __('No artwork found.', 'art-studio') . '</div>';

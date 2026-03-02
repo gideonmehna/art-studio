@@ -35,7 +35,7 @@ class ArtGalleryBlock {
         wp_register_script(
             'art-studio-art-gallery-block-editor',
             ART_STUDIO_PLUGIN_URL . 'assets/js/art-gallery/block.js',
-            array('wp-blocks', 'wp-element', 'wp-editor'),
+            array('wp-blocks', 'wp-element', 'wp-editor', 'wp-api-fetch'),
             ART_STUDIO_VERSION
         );
         
@@ -61,7 +61,11 @@ class ArtGalleryBlock {
                 'uploadUrl' => array(
                     'type' => 'string',
                     'default' => ''
-                )
+                ),
+                'artCategory' => array(
+                    'type'    => 'string',
+                    'default' => ''
+                ),
             ),
             'render_callback' => array($this, 'render_block')
         ));
@@ -89,15 +93,18 @@ class ArtGalleryBlock {
             'taxonomy' => 'art_emotion',
             'hide_empty' => false,
         ));
-        
+
         $artists = $this->get_all_artists();
-        $initial_arts = $this->get_art_pieces();
+        $art_category = !empty($attributes['artCategory']) ? sanitize_text_field($attributes['artCategory']) : '';
+        $initial_arts = $this->get_art_pieces(
+            !empty($art_category) ? array('art_category' => $art_category) : array()
+        );
         $upload_url = !empty($attributes['uploadUrl']) ? $attributes['uploadUrl'] : '#';
-        
+
         ob_start();
         ?>
         <!-- Base Gallery Container (Works without JS) -->
-        <div class="art-gallery-container" data-has-js="false">
+        <div class="art-gallery-container" data-has-js="false" data-category="<?php echo esc_attr($art_category); ?>">
             <div class="art-gallery-filters">
                 <div class="emotion-sidebar"></div>
                 <p>Filters:</p>
@@ -194,18 +201,22 @@ class ArtGalleryBlock {
                 
                 <div class="art-content">
                     <div class="art-grid" id="art-grid">
-                        <?php 
+                        <?php
                         // Get filtered results if parameters exist
                         $filter_args = array();
+                        // Always carry the block-level category filter (invisible to the user)
+                        if (!empty($art_category)) {
+                            $filter_args['art_category'] = $art_category;
+                        }
                         if (!empty($_GET['filter_emotion'])) {
                             $filter_args['emotion'] = sanitize_text_field($_GET['filter_emotion']);
                         }
                         if (!empty($_GET['artist'])) {
                             $filter_args['artist'] = sanitize_text_field($_GET['artist']);
                         }
-                        
-                        $filtered_arts = !empty($filter_args) ? 
-                            $this->get_art_pieces($filter_args) : 
+
+                        $filtered_arts = !empty($filter_args) ?
+                            $this->get_art_pieces($filter_args) :
                             $initial_arts;
                         
                         echo $this->render_art_items($filtered_arts['posts']); 
@@ -280,11 +291,27 @@ class ArtGalleryBlock {
             $args['tax_query'] = array(
                 array(
                     'taxonomy' => 'art_emotion',
-                    'field' => 'slug',
-                    'terms' => $args['emotion'],
+                    'field'    => 'slug',
+                    'terms'    => $args['emotion'],
                 ),
             );
             unset($args['emotion']);
+        }
+
+        // Handle art_category filter (block-level scope, not user-visible)
+        if (!empty($args['art_category'])) {
+            $cat_clause = array(
+                'taxonomy' => 'art_category',
+                'field'    => 'slug',
+                'terms'    => sanitize_text_field($args['art_category']),
+            );
+            if (!empty($args['tax_query'])) {
+                $args['tax_query']['relation'] = 'AND';
+                $args['tax_query'][] = $cat_clause;
+            } else {
+                $args['tax_query'] = array($cat_clause);
+            }
+            unset($args['art_category']);
         }
         
         // Handle artist filter
@@ -475,15 +502,19 @@ class ArtGalleryBlock {
         if (!empty($filters['age_max'])) {
             $args['age_max'] = intval($filters['age_max']);
         }
-        
+
+        if (!empty($filters['art_category'])) {
+            $args['art_category'] = sanitize_text_field($filters['art_category']);
+        }
+
         $result = $this->get_art_pieces($args);
-        
+
         wp_send_json_success(array(
             'html' => $this->render_art_items($result['posts']),
             'has_more' => $result['has_more'],
         ));
     }
-    
+
     public function filter_art() {
         
         error_log('=== FILTER ART AJAX CALLED ===');
@@ -529,9 +560,13 @@ class ArtGalleryBlock {
         if (!empty($filters['age_max'])) {
             $args['age_max'] = intval($filters['age_max']);
         }
-        
+
+        if (!empty($filters['art_category'])) {
+            $args['art_category'] = sanitize_text_field($filters['art_category']);
+        }
+
         $result = $this->get_art_pieces($args);
-        
+
         wp_send_json_success(array(
             'html' => $this->render_art_items($result['posts']),
             'has_more' => $result['has_more'],
