@@ -1,0 +1,39 @@
+name: Deploy to Hostinger
+
+# Triggers on every push to master — this is the "go live" branch.
+# Work in a feature branch and merge to master when ready to deploy.
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    name: Sync plugin to Hostinger via rsync
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.HOSTINGER_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          # Add Hostinger host to known_hosts to avoid interactive prompt.
+          ssh-keyscan -p 65002 -H "${{ secrets.HOSTINGER_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Deploy via rsync
+        run: |
+          rsync -avz --delete \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='*.md' \
+            --exclude='.gitignore' \
+            -e "ssh -p 65002 -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no" \
+            ./ \
+            "${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}:${{ secrets.HOSTINGER_TARGET_PATH }}"
+
+      - name: Confirm deployment
+        run: echo "Deployment complete. Check the Actions tab for any errors."

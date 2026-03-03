@@ -1,0 +1,22 @@
+# OS artifacts
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor temp files
+*.swp
+*.swo
+*.orig
+.idea/
+.vscode/
+
+# PHP artifacts
+*.log
+
+# If a build step is added in future
+node_modules/
+vendor/
+
+# Local environment config
+.env
+.env.local

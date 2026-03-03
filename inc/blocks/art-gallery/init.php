@@ -59,12 +59,22 @@ class ArtGalleryBlock {
             'style' => 'art-studio-art-gallery-block-frontend',
             'attributes' => array(
                 'uploadUrl' => array(
-                    'type' => 'string',
-                    'default' => ''
-                ),
-                'artCategory' => array(
                     'type'    => 'string',
                     'default' => ''
+                ),
+                'artCategory' => array(       // legacy single-slug — kept for backward compat
+                    'type'    => 'string',
+                    'default' => ''
+                ),
+                'artCategories' => array(     // multi-slug array
+                    'type'    => 'array',
+                    'default' => array(),
+                    'items'   => array( 'type' => 'string' ),
+                ),
+                'allowedEmotions' => array(   // emotion sidebar whitelist
+                    'type'    => 'array',
+                    'default' => array(),
+                    'items'   => array( 'type' => 'string' ),
                 ),
             ),
             'render_callback' => array($this, 'render_block')
@@ -89,22 +99,51 @@ class ArtGalleryBlock {
     }
     
     public function render_block($attributes) {
-        $emotions = get_terms(array(
-            'taxonomy' => 'art_emotion',
-            'hide_empty' => false,
-        ));
 
-        $artists = $this->get_all_artists();
-        $art_category = !empty($attributes['artCategory']) ? sanitize_text_field($attributes['artCategory']) : '';
+        // --- Derive effective category list (new array wins; falls back to legacy string) ---
+        $art_categories_attr = isset( $attributes['artCategories'] ) && is_array( $attributes['artCategories'] )
+            ? $attributes['artCategories'] : array();
+        $art_category_legacy = isset( $attributes['artCategory'] )
+            ? sanitize_text_field( $attributes['artCategory'] ) : '';
+
+        if ( ! empty( $art_categories_attr ) ) {
+            $effective_categories = array_values( array_filter( array_map( 'sanitize_text_field', $art_categories_attr ) ) );
+        } elseif ( ! empty( $art_category_legacy ) ) {
+            $effective_categories = array( $art_category_legacy );
+        } else {
+            $effective_categories = array();
+        }
+
+        // --- Derive emotion whitelist ---
+        $allowed_emotions_attr = isset( $attributes['allowedEmotions'] ) && is_array( $attributes['allowedEmotions'] )
+            ? $attributes['allowedEmotions'] : array();
+        $allowed_emotions = array_values( array_filter( array_map( 'sanitize_text_field', $allowed_emotions_attr ) ) );
+        $filter_emotions  = ! empty( $allowed_emotions );
+
+        // --- Fetch emotions, applying whitelist if set ---
+        $all_emotions = get_terms( array( 'taxonomy' => 'art_emotion', 'hide_empty' => false ) );
+        if ( $filter_emotions && ! is_wp_error( $all_emotions ) ) {
+            $emotions = array_values( array_filter( $all_emotions, function( $term ) use ( $allowed_emotions ) {
+                return in_array( $term->slug, $allowed_emotions, true );
+            } ) );
+        } else {
+            $emotions = is_wp_error( $all_emotions ) ? array() : $all_emotions;
+        }
+
+        $artists      = $this->get_all_artists();
         $initial_arts = $this->get_art_pieces(
-            !empty($art_category) ? array('art_category' => $art_category) : array()
+            ! empty( $effective_categories ) ? array( 'art_categories' => $effective_categories ) : array()
         );
-        $upload_url = !empty($attributes['uploadUrl']) ? $attributes['uploadUrl'] : '#';
+        $upload_url           = ! empty( $attributes['uploadUrl'] ) ? $attributes['uploadUrl'] : '#';
+        $data_categories_json = wp_json_encode( $effective_categories );
 
         ob_start();
         ?>
         <!-- Base Gallery Container (Works without JS) -->
-        <div class="art-gallery-container" data-has-js="false" data-category="<?php echo esc_attr($art_category); ?>">
+        <div class="art-gallery-container"
+             data-has-js="false"
+             data-categories="<?php echo esc_attr( $data_categories_json ); ?>"
+             data-category="<?php echo esc_attr( ! empty( $effective_categories ) ? $effective_categories[0] : '' ); ?>">
             <div class="art-gallery-filters">
                 <div class="emotion-sidebar"></div>
                 <p>Filters:</p>
@@ -204,9 +243,9 @@ class ArtGalleryBlock {
                         <?php
                         // Get filtered results if parameters exist
                         $filter_args = array();
-                        // Always carry the block-level category filter (invisible to the user)
-                        if (!empty($art_category)) {
-                            $filter_args['art_category'] = $art_category;
+                        // Always carry the block-level category scope (invisible to the user)
+                        if ( ! empty( $effective_categories ) ) {
+                            $filter_args['art_categories'] = $effective_categories;
                         }
                         if (!empty($_GET['filter_emotion'])) {
                             $filter_args['emotion'] = sanitize_text_field($_GET['filter_emotion']);
@@ -298,7 +337,27 @@ class ArtGalleryBlock {
             unset($args['emotion']);
         }
 
-        // Handle art_category filter (block-level scope, not user-visible)
+        // Handle art_categories filter (array of slugs, operator IN)
+        if ( ! empty( $args['art_categories'] ) && is_array( $args['art_categories'] ) ) {
+            $slugs = array_values( array_filter( array_map( 'sanitize_text_field', $args['art_categories'] ) ) );
+            if ( ! empty( $slugs ) ) {
+                $cat_clause = array(
+                    'taxonomy' => 'art_category',
+                    'field'    => 'slug',
+                    'terms'    => $slugs,
+                    'operator' => 'IN',
+                );
+                if ( ! empty( $args['tax_query'] ) ) {
+                    $args['tax_query']['relation'] = 'AND';
+                    $args['tax_query'][]           = $cat_clause;
+                } else {
+                    $args['tax_query'] = array( $cat_clause );
+                }
+            }
+            unset( $args['art_categories'] );
+        }
+
+        // Handle art_category filter — legacy single-slug (kept for backward compat)
         if (!empty($args['art_category'])) {
             $cat_clause = array(
                 'taxonomy' => 'art_category',
@@ -503,8 +562,10 @@ class ArtGalleryBlock {
             $args['age_max'] = intval($filters['age_max']);
         }
 
-        if (!empty($filters['art_category'])) {
-            $args['art_category'] = sanitize_text_field($filters['art_category']);
+        if ( ! empty( $filters['art_categories'] ) && is_array( $filters['art_categories'] ) ) {
+            $args['art_categories'] = array_filter( array_map( 'sanitize_text_field', $filters['art_categories'] ) );
+        } elseif ( ! empty( $filters['art_category'] ) ) {
+            $args['art_category'] = sanitize_text_field( $filters['art_category'] ); // legacy fallback
         }
 
         $result = $this->get_art_pieces($args);
@@ -561,8 +622,10 @@ class ArtGalleryBlock {
             $args['age_max'] = intval($filters['age_max']);
         }
 
-        if (!empty($filters['art_category'])) {
-            $args['art_category'] = sanitize_text_field($filters['art_category']);
+        if ( ! empty( $filters['art_categories'] ) && is_array( $filters['art_categories'] ) ) {
+            $args['art_categories'] = array_filter( array_map( 'sanitize_text_field', $filters['art_categories'] ) );
+        } elseif ( ! empty( $filters['art_category'] ) ) {
+            $args['art_category'] = sanitize_text_field( $filters['art_category'] ); // legacy fallback
         }
 
         $result = $this->get_art_pieces($args);

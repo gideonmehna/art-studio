@@ -8,10 +8,20 @@ jQuery(document).ready(function($) {
     };
     let isLoading = false;
 
-    // Read the permanent block-level category set by the editor (e.g. 'pro', 'general', or '').
-    // This is never shown to the user — it scopes the gallery to a specific category.
-    const galleryContainer = document.querySelector('.art-gallery-container');
-    const blockCategory = galleryContainer ? (galleryContainer.getAttribute('data-category') || '') : '';
+    // Read the permanent block-level category scope set by the editor.
+    // data-categories holds a JSON array e.g. '["pro","general"]' or '[]'.
+    // This is never shown to the user — it scopes the gallery to specific categories.
+    var galleryContainer     = document.querySelector('.art-gallery-container');
+    var blockCategoriesRaw   = galleryContainer ? galleryContainer.getAttribute('data-categories') : null;
+    var blockCategories;
+    try {
+        blockCategories = blockCategoriesRaw ? JSON.parse(blockCategoriesRaw) : [];
+    } catch(e) {
+        // Malformed JSON — fall back gracefully to legacy single-value attribute
+        console.warn('Art Gallery: could not parse data-categories', e);
+        var legacyCat = galleryContainer ? (galleryContainer.getAttribute('data-category') || '') : '';
+        blockCategories = legacyCat ? [legacyCat] : [];
+    }
     
     // Filter toggle functionality
     $('.filter-toggle').on('click', function() {
@@ -105,7 +115,7 @@ jQuery(document).ready(function($) {
             type: 'POST',
             data: {
                 action: 'art_studio_filter_art',
-                filters: Object.assign({}, currentFilters, { art_category: blockCategory }),
+                filters: Object.assign({}, currentFilters, { art_categories: blockCategories }),
                 nonce: artGalleryAjax.nonce
             },
             success: function(response) {
@@ -148,7 +158,7 @@ jQuery(document).ready(function($) {
             data: {
                 action: 'art_studio_load_more_art',
                 page: currentPage,
-                filters: Object.assign({}, currentFilters, { art_category: blockCategory }),
+                filters: Object.assign({}, currentFilters, { art_categories: blockCategories }),
                 nonce: artGalleryAjax.nonce
             },
             success: function(response) {
