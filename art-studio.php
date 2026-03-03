@@ -4,7 +4,7 @@
  * Plugin Name: Art Studio
  * Plugin URI: https://elyownsoftware.com/
  * Description: A comprehensive plugin for managing children's art pieces with custom post types, taxonomies, and Gutenberg blocks for showcasing artwork.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Gideon Mehna
  * Author URI: https://elyownsoftware.com/
  * Text Domain: art-studio
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('ART_STUDIO_VERSION', '1.0.0');
+define('ART_STUDIO_VERSION', '1.1.0');
 define('ART_STUDIO_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('ART_STUDIO_PLUGIN_PATH', plugin_dir_path(__FILE__));
 
