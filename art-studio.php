@@ -4,7 +4,7 @@
  * Plugin Name: Art Studio
  * Plugin URI: https://elyownsoftware.com/
  * Description: A comprehensive plugin for managing children's art pieces with custom post types, taxonomies, and Gutenberg blocks for showcasing artwork.
- * Version: 1.1.0
+ * Version: 1.1.3
  * Author: Gideon Mehna
  * Author URI: https://elyownsoftware.com/
  * Text Domain: art-studio
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('ART_STUDIO_VERSION', '1.1.0');
+define('ART_STUDIO_VERSION', '1.1.3');
 define('ART_STUDIO_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('ART_STUDIO_PLUGIN_PATH', plugin_dir_path(__FILE__));
 
@@ -821,222 +821,191 @@ add_action('forminator_form_after_save_entry', 'create_artwork_post_from_formina
 
 function create_artwork_post_from_forminator($form_id, $response, $form_fields = null)
 {
-    error_log('[ART STUDIO Forminator Plugin] Fired');
-    error_log('Art Studio: Form ID - ' . $form_id);
-    error_log('Art Studio: Response - ' . print_r($response, true));
-    error_log('Art Studio: Form Fields - ' . print_r($form_fields, true));
+    error_log('[ART STUDIO] Forminator hook fired for form ID: ' . $form_id);
 
-    // Load the admin-configured form → category mapping from the database
-    $form_map = get_option('art_studio_form_category_map', array());
-    $active_form_ids = array_keys($form_map);
+    // STEP 1: Category map gate — form must be registered here to process at all.
+    $form_category_map = get_option('art_studio_form_category_map', array());
+    $active_form_ids   = array_keys($form_category_map);
 
     if (empty($active_form_ids) || !in_array($form_id, $active_form_ids)) {
-        error_log('Art Studio: Form ID ' . $form_id . ' is not mapped — skipping.');
+        error_log('[ART STUDIO] Form ' . $form_id . ' not in category map — skipping.');
         return;
     }
 
-    // Determine the art_category to assign based on the form ID
-    $assigned_category = !empty($form_map[$form_id]) ? $form_map[$form_id] : '';
+    $assigned_category = !empty($form_category_map[$form_id]) ? $form_category_map[$form_id] : '';
 
-    error_log('Art Studio: Raw POST data: ' . print_r($_POST, true));
-    error_log('Art Studio: Raw FILES data: ' . print_r($_FILES, true));
+    // STEP 2: Load the field map for this form.
+    // If none is configured yet, bail — prevents malformed posts during setup.
+    $all_field_maps = get_option('art_studio_field_map', array());
+    $field_map      = isset($all_field_maps[$form_id]) ? $all_field_maps[$form_id] : array();
 
-    // Map form fields to meaningful keys
-    $data = [
-        'artist_name' => sanitize_text_field($_POST['name-1'] ?? ''),
-        'artist_age' => absint($_POST['number-1'] ?? 0),
-        'guardian_name' => sprintf('%s %s', sanitize_text_field($_POST['name-2-first-name'] ?? ''), sanitize_text_field($_POST['name-2-last-name'] ?? '')),
-        'guardian_email' => sanitize_email($_POST['email-2'] ?? ''),
-        'title_of_artwork' => sanitize_text_field($_POST['text-1'] ?? ''),
-        'description' => sanitize_textarea_field($_POST['textarea-1'] ?? ''),
-        'artwork_emotion' => isset($_POST['checkbox-1']) ? array_map('sanitize_text_field', (array) $_POST['checkbox-1']) : [],
-        'consent' => 'yes' // Assuming consent is implied by submission
-    ];
-
-    // Validate required fields
-    foreach (['artist_name', 'artist_age', 'guardian_name', 'guardian_email', 'title_of_artwork', 'description'] as $field) {
-        if (empty($data[$field])) {
-            error_log("Art Studio: Missing required field - {$field}");
-            return;
-        }
+    if (empty($field_map)) {
+        error_log('[ART STUDIO] No field map configured for form ' . $form_id . '. Go to Art Pieces → Form Settings to set up field mappings.');
+        return;
     }
 
-    // Create the post
-    $post_data = [
-        'post_title' => $data['title_of_artwork'],
-        'post_content' => $data['description'],
-        'post_type' => 'art_piece',
-        'post_status' => 'pending',
-        'meta_input' => [
-            '_artist_name' => $data['artist_name'],
-            '_artist_age' => $data['artist_age'],
-            '_guardian_name' => $data['guardian_name'],
-            '_guardian_email' => $data['guardian_email']
-        ]
-    ];
+    error_log('[ART STUDIO] POST data: ' . print_r($_POST, true));
+    error_log('[ART STUDIO] FILES data: ' . print_r($_FILES, true));
+
+    // STEP 3: Build post data buckets from the field map.
+    $processed          = art_studio_build_post_from_field_map($field_map, $_POST);
+    $post_title         = $processed['post_title'];
+    $taxonomy_terms     = $processed['taxonomy_terms'];
+    $upload_field       = $processed['upload_field'];
+    $notify_artist_name = $processed['notify_name'];
+
+    // STEP 4: Require a post title at minimum.
+    if (empty($post_title)) {
+        error_log('[ART STUDIO] No post_title resolved from field map for form ' . $form_id . '. Check Field Mapper settings.');
+        return;
+    }
+
+    // STEP 5: Insert the art_piece post.
+    $post_data = array(
+        'post_title'   => $post_title,
+        'post_content' => $processed['post_content'],
+        'post_type'    => 'art_piece',
+        'post_status'  => 'pending',
+        'meta_input'   => $processed['meta_input'],
+    );
 
     $post_id = wp_insert_post($post_data);
 
     if (is_wp_error($post_id)) {
-        error_log("Art Studio: Failed to create post - " . $post_id->get_error_message());
+        error_log('[ART STUDIO] wp_insert_post failed: ' . $post_id->get_error_message());
         return;
     }
 
-    error_log("Art Studio: Successfully created post with ID - {$post_id}");
+    error_log('[ART STUDIO] Created art_piece post ID: ' . $post_id);
 
-    // Auto-assign art_category based on which form was submitted
+    // STEP 6: Assign art_category from the form→category map (unchanged behavior).
     if (!empty($assigned_category)) {
         $cat_result = wp_set_object_terms($post_id, $assigned_category, 'art_category');
         if (is_wp_error($cat_result)) {
-            error_log('Art Studio: Failed to set art_category - ' . $cat_result->get_error_message());
+            error_log('[ART STUDIO] Failed to set art_category: ' . $cat_result->get_error_message());
         } else {
-            error_log('Art Studio: Set art_category to "' . $assigned_category . '" for post ' . $post_id);
+            error_log('[ART STUDIO] art_category set to: ' . $assigned_category);
         }
     }
 
-    // Set taxonomy terms and tags
-    if (!empty($data['artwork_emotion'])) {
-        $tags = array();
-
-        // Set emotion taxonomy terms and add them as tags
-        $term_result = wp_set_object_terms($post_id, $data['artwork_emotion'], 'art_emotion');
-        if (is_wp_error($term_result)) {
-            error_log("Art Studio: Failed to set emotion terms - " . $term_result->get_error_message());
+    // STEP 7: Assign all taxonomy terms collected from the field map.
+    foreach ($taxonomy_terms as $taxonomy => $terms) {
+        if (empty($terms)) {
+            continue;
         }
-
-        // Add selected taxonomy terms as tags
-        foreach ($data['artwork_emotion'] as $emotion) {
-            $tags[] = $emotion;
-        }
-
-        // Add additional emotions from text-3 as tags
-        if (!empty($_POST['text-3'])) {
-            $custom_emotions = array_map('trim', explode(',', sanitize_text_field($_POST['text-3'])));
-            if (!empty($custom_emotions)) {
-                $tags = array_merge($tags, $custom_emotions);
-            }
-        }
-
-        // Set all tags
-        if (!empty($tags)) {
-            $tag_result = wp_set_post_tags($post_id, $tags, true);
-            if (is_wp_error($tag_result)) {
-                error_log("Art Studio: Failed to set tags - " . $tag_result->get_error_message());
-            }
-        }
-    }
-
-    // ...existing code...
-    error_log('Art Studio: Raw FILES data: ' . print_r($_FILES, true));
-
-    // Polished upload handler: try media_handle_upload, then deterministic Forminator-folder sideload.
-    $attachment_id = false;
-    $upload_field = 'upload-1';
-
-    // Load media helpers once
-    require_once ABSPATH . 'wp-admin/includes/file.php';
-    require_once ABSPATH . 'wp-admin/includes/image.php';
-    require_once ABSPATH . 'wp-admin/includes/media.php';
-
-    // Fast path: media_handle_upload when PHP considers the file "uploaded"
-    if (!empty($_FILES[$upload_field]) && empty($_FILES[$upload_field]['error'])) {
-        error_log('Art Studio: Fast path - attempting media_handle_upload for ' . $upload_field);
-        $attach_try = media_handle_upload($upload_field, $post_id);
-        if (!is_wp_error($attach_try)) {
-            $attachment_id = $attach_try;
-            error_log("Art Studio: media_handle_upload succeeded, attachment ID {$attachment_id}");
+        // post_tag appends so multiple fields mapping to tags stack correctly.
+        $append = ($taxonomy === 'post_tag');
+        $result = wp_set_object_terms($post_id, $terms, $taxonomy, $append);
+        if (is_wp_error($result)) {
+            error_log('[ART STUDIO] Failed to set taxonomy "' . $taxonomy . '": ' . $result->get_error_message());
         } else {
-            $upload_error_msg = $attach_try->get_error_message();
-            error_log('Art Studio: media_handle_upload failed - ' . $upload_error_msg);
+            error_log('[ART STUDIO] Set taxonomy "' . $taxonomy . '" terms: ' . implode(', ', $terms));
         }
-    } else {
-        error_log('Art Studio: No valid $_FILES entry for ' . $upload_field);
     }
 
-    // Deterministic fallback: search the Forminator upload folders for a file that ends with the original basename
-    if (!$attachment_id && !empty($_FILES[$upload_field]['name'])) {
-        $original_basename = sanitize_file_name($_FILES[$upload_field]['name']);
-        $uploads = wp_upload_dir();
-        if (isset($uploads['basedir'])) {
-            $forminator_base = trailingslashit($uploads['basedir']) . 'forminator';
-            error_log('Art Studio: Fallback - searching Forminator folders for: ' . $original_basename . ' in ' . $forminator_base);
+    // STEP 8: Handle file upload / sideload (upload logic is identical; only $upload_field is now dynamic).
+    $attachment_id    = false;
+    $upload_error_msg = '';
 
-            if (is_dir($forminator_base)) {
-                // List all candidates under */uploads/
-                $candidates = glob($forminator_base . '/*/uploads/*' . $original_basename, GLOB_NOSORT);
-                $found = false;
-                if (!empty($candidates)) {
-                    // pick the first candidate whose basename ends exactly with original basename (avoid partial matches)
-                    foreach ($candidates as $candidate) {
-                        if (str_ends_with(basename($candidate), $original_basename)) {
-                            $found = $candidate;
-                            break;
+    if (!empty($upload_field)) {
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+        require_once ABSPATH . 'wp-admin/includes/image.php';
+        require_once ABSPATH . 'wp-admin/includes/media.php';
+
+        // Fast path: media_handle_upload when PHP considers the file "uploaded".
+        if (!empty($_FILES[$upload_field]) && empty($_FILES[$upload_field]['error'])) {
+            error_log('[ART STUDIO] Fast path - attempting media_handle_upload for ' . $upload_field);
+            $attach_try = media_handle_upload($upload_field, $post_id);
+            if (!is_wp_error($attach_try)) {
+                $attachment_id = $attach_try;
+                error_log('[ART STUDIO] media_handle_upload succeeded, attachment ID ' . $attachment_id);
+            } else {
+                $upload_error_msg = $attach_try->get_error_message();
+                error_log('[ART STUDIO] media_handle_upload failed: ' . $upload_error_msg);
+            }
+        } else {
+            error_log('[ART STUDIO] No valid $_FILES entry for ' . $upload_field);
+        }
+
+        // Deterministic fallback: search Forminator upload folders for a matching file.
+        if (!$attachment_id && !empty($_FILES[$upload_field]['name'])) {
+            $original_basename = sanitize_file_name($_FILES[$upload_field]['name']);
+            $uploads = wp_upload_dir();
+            if (isset($uploads['basedir'])) {
+                $forminator_base = trailingslashit($uploads['basedir']) . 'forminator';
+                error_log('[ART STUDIO] Fallback - searching Forminator folders for: ' . $original_basename . ' in ' . $forminator_base);
+
+                if (is_dir($forminator_base)) {
+                    $candidates = glob($forminator_base . '/*/uploads/*' . $original_basename, GLOB_NOSORT);
+                    $found = false;
+                    if (!empty($candidates)) {
+                        foreach ($candidates as $candidate) {
+                            if (str_ends_with(basename($candidate), $original_basename)) {
+                                $found = $candidate;
+                                break;
+                            }
                         }
                     }
-                }
 
-                if ($found) {
-                    error_log('Art Studio: Found candidate file at: ' . $found);
-                    // create a temp copy and sideload it
-                    $tmp_path = wp_tempnam($found);
-                    if ($tmp_path && copy($found, $tmp_path)) {
-                        $file_array = array(
-                            'name' => basename($found),
-                            'tmp_name' => $tmp_path,
-                        );
-                        $attach_id = media_handle_sideload($file_array, $post_id);
-                        // remove temp copy
-                        if (file_exists($tmp_path)) {
-                            @unlink($tmp_path);
-                        }
-                        if (is_wp_error($attach_id)) {
-                            error_log('Art Studio: media_handle_sideload failed for candidate - ' . $attach_id->get_error_message());
+                    if ($found) {
+                        error_log('[ART STUDIO] Found candidate file at: ' . $found);
+                        $tmp_path = wp_tempnam($found);
+                        if ($tmp_path && copy($found, $tmp_path)) {
+                            $file_array = array(
+                                'name'     => basename($found),
+                                'tmp_name' => $tmp_path,
+                            );
+                            $attach_id = media_handle_sideload($file_array, $post_id);
+                            if (file_exists($tmp_path)) {
+                                @unlink($tmp_path);
+                            }
+                            if (is_wp_error($attach_id)) {
+                                error_log('[ART STUDIO] media_handle_sideload failed: ' . $attach_id->get_error_message());
+                            } else {
+                                $attachment_id = $attach_id;
+                                error_log('[ART STUDIO] media_handle_sideload succeeded, attachment ID ' . $attachment_id);
+                            }
                         } else {
-                            $attachment_id = $attach_id;
-                            error_log("Art Studio: media_handle_sideload succeeded from Forminator folder, attachment ID {$attachment_id}");
+                            error_log('[ART STUDIO] Failed to copy candidate file to temp for sideload.');
                         }
                     } else {
-                        error_log('Art Studio: Failed to copy candidate file to temp for sideload.');
+                        error_log('[ART STUDIO] No matching file found in Forminator folders for ' . $original_basename);
                     }
                 } else {
-                    error_log('Art Studio: No exact matching file found in Forminator folders for ' . $original_basename);
+                    error_log('[ART STUDIO] Forminator upload base not found: ' . $forminator_base);
                 }
             } else {
-                error_log('Art Studio: Forminator upload base not found: ' . $forminator_base);
+                error_log('[ART STUDIO] wp_upload_dir did not return a basedir.');
+            }
+        }
+
+        if ($attachment_id && !is_wp_error($attachment_id)) {
+            if (set_post_thumbnail($post_id, $attachment_id)) {
+                error_log('[ART STUDIO] Featured image set, attachment ID: ' . $attachment_id);
+            } else {
+                error_log('[ART STUDIO] set_post_thumbnail failed for attachment ID: ' . $attachment_id);
             }
         } else {
-            error_log('Art Studio: wp_upload_dir did not return a basedir.');
+            error_log('[ART STUDIO] No attachment created. Last upload error: ' . ($upload_error_msg ?: 'none'));
         }
     }
 
-    // Finalize: set featured image if attachment created
-    if ($attachment_id && !is_wp_error($attachment_id)) {
-        if (set_post_thumbnail($post_id, $attachment_id)) {
-            error_log("Art Studio: Successfully set featured image with ID - {$attachment_id}");
-        } else {
-            error_log("Art Studio: set_post_thumbnail failed for attachment ID - {$attachment_id}");
-        }
-    } else {
-        error_log('Art Studio: No attachment created; skipping featured image. Last upload error: ' . ($upload_error_msg ?? 'none'));
-    }
-
-
-    // Send notification
-    // $admin_email = get_option('admin_email');
+    // STEP 9: Send admin notification email.
     $admin_email = 'it.ccdmp@utoronto.ca';
-    $subject = "New Artwork Submission: {$data['title_of_artwork']}";
-    $message = "New artwork submission requires review:\n\n" .
-        "Title: {$data['title_of_artwork']}\n" .
-        "Artist: {$data['artist_name']} (Age: {$data['artist_age']})\n" .
-        "Guardian: {$data['guardian_name']}\n\n" .
-        "View submission: " . get_edit_post_link($post_id);
+    $subject     = 'New Artwork Submission: ' . $post_title;
+    $message     = "New artwork submission requires review:\n\n" .
+                   'Title: '  . $post_title . "\n" .
+                   'Artist: ' . $notify_artist_name . "\n\n" .
+                   'View submission: ' . get_edit_post_link($post_id);
 
     wp_mail($admin_email, $subject, $message);
+    error_log('[ART STUDIO] Notification email sent to ' . $admin_email);
 }
 
 
 
 // Art Gallery block
+require_once ART_STUDIO_PLUGIN_PATH . 'inc/field-map-processor.php';
 require_once ART_STUDIO_PLUGIN_PATH . 'inc/blocks/art-gallery/init.php';
 
 // Art Showcase block
@@ -1129,6 +1098,104 @@ function art_studio_save_form_map()
     wp_send_json_success(__('Mappings saved successfully.', 'art-studio'));
 }
 add_action('wp_ajax_art_studio_save_form_map', 'art_studio_save_form_map');
+
+
+/**
+ * AJAX handler: return Forminator form fields as JSON for the Field Mapper UI
+ */
+function art_studio_get_form_fields()
+{
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'art_studio_field_map_nonce')) {
+        wp_send_json_error('Security check failed');
+    }
+
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error('Insufficient permissions');
+    }
+
+    $form_id = absint(isset($_POST['form_id']) ? $_POST['form_id'] : 0);
+    if ($form_id < 1) {
+        wp_send_json_error('Invalid form ID');
+    }
+
+    if (!class_exists('Forminator_API')) {
+        wp_send_json_error('Forminator is not active');
+    }
+
+    // Try the public API first; fall back to raw post meta if the method signature changes.
+    $fields = null;
+    if (method_exists('Forminator_API', 'get_form_fields')) {
+        $fields = Forminator_API::get_form_fields($form_id);
+    }
+
+    if (is_wp_error($fields) || is_null($fields)) {
+        // Fallback: read raw post meta directly (Forminator stores form data in 'forminator_form_meta')
+        $raw_meta = get_post_meta($form_id, 'forminator_form_meta', true);
+        $raw      = !empty($raw_meta['fields']) ? $raw_meta['fields'] : array();
+        if (!empty($raw) && is_array($raw)) {
+            $fields = $raw;
+        } else {
+            wp_send_json_error('Could not read form fields. Ensure the form exists and Forminator is active.');
+        }
+    }
+
+    $skip_types = array('html', 'section', 'page-break', 'captcha', 'hidden', 'divider');
+    $output     = array();
+
+    foreach ($fields as $field) {
+        $parsed = art_studio_parse_forminator_field($field);
+        if (empty($parsed) || in_array($parsed['type'], $skip_types, true)) {
+            continue;
+        }
+        $output[] = $parsed;
+    }
+
+    wp_send_json_success($output);
+}
+add_action('wp_ajax_art_studio_get_form_fields', 'art_studio_get_form_fields');
+
+
+/**
+ * AJAX handler: save field mappings for a given form to the art_studio_field_map option
+ */
+function art_studio_save_field_map()
+{
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'art_studio_field_map_nonce')) {
+        wp_send_json_error('Security check failed');
+    }
+
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error('Insufficient permissions');
+    }
+
+    $form_id = absint(isset($_POST['form_id']) ? $_POST['form_id'] : 0);
+    if ($form_id < 1) {
+        wp_send_json_error('Invalid form ID');
+    }
+
+    $raw_mappings = isset($_POST['field_map'])
+        ? json_decode(stripslashes($_POST['field_map']), true)
+        : array();
+
+    $sanitized = array();
+
+    if (is_array($raw_mappings)) {
+        foreach ($raw_mappings as $entry) {
+            $element_id     = sanitize_text_field(isset($entry['element_id']) ? $entry['element_id'] : '');
+            $sanitized_entry = art_studio_sanitize_field_map_entry($entry);
+            if ($sanitized_entry !== null) {
+                $sanitized[$element_id] = $sanitized_entry;
+            }
+        }
+    }
+
+    $all_maps           = get_option('art_studio_field_map', array());
+    $all_maps[$form_id] = $sanitized;
+    update_option('art_studio_field_map', $all_maps);
+
+    wp_send_json_success(__('Field mappings saved.', 'art-studio'));
+}
+add_action('wp_ajax_art_studio_save_field_map', 'art_studio_save_field_map');
 
 
 /**
@@ -1263,20 +1330,94 @@ function art_studio_form_settings_page()
         </p>
     </div>
 
+    <hr style="margin:32px 0;" />
+
+    <div class="wrap">
+        <h2><?php esc_html_e('Field Mapper', 'art-studio'); ?></h2>
+        <p><?php esc_html_e(
+            'Select a form and click "Load Fields" — every field in that form will appear below. Map each one to where its value should go in the art piece post. You do not need to know field IDs in advance; they are read directly from Forminator.',
+            'art-studio'
+        ); ?></p>
+
+        <table style="border-collapse:collapse;margin-bottom:16px;">
+            <tr>
+                <td style="padding:0 12px 0 0;">
+                    <label for="art-studio-field-map-form-select">
+                        <strong><?php esc_html_e('Form', 'art-studio'); ?></strong>
+                    </label>
+                </td>
+                <td>
+                    <select id="art-studio-field-map-form-select">
+                        <option value=""><?php esc_html_e('— Select a Form —', 'art-studio'); ?></option>
+                        <?php foreach ($forminator_forms as $form): ?>
+                        <option value="<?php echo absint($form->id); ?>">
+                            <?php echo esc_html(get_the_title($form->id)); ?> (ID: <?php echo absint($form->id); ?>)
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
+                </td>
+                <td style="padding:0 0 0 12px;">
+                    <button type="button" id="art-studio-load-fields" class="button">
+                        <?php esc_html_e('Load Fields', 'art-studio'); ?>
+                    </button>
+                </td>
+            </tr>
+        </table>
+
+        <p id="art-studio-load-status-line" style="min-height:22px;margin:8px 0 0;">
+            <span id="art-studio-load-status"></span>
+        </p>
+
+        <div id="art-studio-field-map-container" style="display:none;">
+            <table id="art-studio-field-map-table" style="border-collapse:collapse;width:100%;max-width:900px;">
+                <thead>
+                    <tr>
+                        <th style="text-align:left;padding:8px 12px;border-bottom:2px solid #ddd;width:28%;"><?php esc_html_e('Field Label', 'art-studio'); ?></th>
+                        <th style="text-align:left;padding:8px 12px;border-bottom:2px solid #ddd;width:18%;color:#666;"><?php esc_html_e('Field ID', 'art-studio'); ?></th>
+                        <th style="text-align:left;padding:8px 12px;border-bottom:2px solid #ddd;width:22%;"><?php esc_html_e('Maps To', 'art-studio'); ?></th>
+                        <th style="text-align:left;padding:8px 12px;border-bottom:2px solid #ddd;"><?php esc_html_e('Destination', 'art-studio'); ?></th>
+                    </tr>
+                </thead>
+                <tbody id="art-studio-field-map-rows">
+                    <!-- Populated by JS after "Load Fields" -->
+                </tbody>
+            </table>
+
+            <p style="margin-top:16px;">
+                <button type="button" id="art-studio-save-field-map" class="button button-primary">
+                    <?php esc_html_e('Save Field Mappings', 'art-studio'); ?>
+                </button>
+                <span id="art-studio-field-map-status" style="margin-left:12px;"></span>
+            </p>
+        </div>
+    </div>
+
     <script>
     (function($) {
         var config = <?php echo wp_json_encode(array(
-            'ajaxUrl'     => admin_url('admin-ajax.php'),
-            'nonce'       => wp_create_nonce('art_studio_form_map_nonce'),
-            'formOptions' => $form_options_html,
-            'catOptions'  => $cat_options_html,
+            // Existing form-category map config
+            'ajaxUrl'       => admin_url('admin-ajax.php'),
+            'nonce'         => wp_create_nonce('art_studio_form_map_nonce'),
+            'formOptions'   => $form_options_html,
+            'catOptions'    => $cat_options_html,
+            // Field mapper additions
+            'fieldMapNonce' => wp_create_nonce('art_studio_field_map_nonce'),
+            'existingMaps'  => get_option('art_studio_field_map', array()),
+            'taxonomies'    => array(
+                array('slug' => 'art_emotion',  'label' => 'Art Emotion'),
+                array('slug' => 'art_category', 'label' => 'Art Category'),
+                array('slug' => 'post_tag',     'label' => 'Tags'),
+            ),
         )); ?>;
 
+        // =====================================================
+        // SECTION A: Form → Category map (unchanged)
+        // =====================================================
         function buildNewRow() {
             return $('<tr class="form-map-row">' +
                 '<td style="padding:8px 12px;"><select name="form_id" style="width:100%;">' + config.formOptions + '</select></td>' +
                 '<td style="padding:8px 12px;"><select name="category" style="width:100%;">' + config.catOptions + '</select></td>' +
-                '<td style="padding:8px 12px;"><button type="button" class="button remove-row" style="color:#b32d2e;">✕ <?php esc_js(__('Remove', 'art-studio')); ?></button></td>' +
+                '<td style="padding:8px 12px;"><button type="button" class="button remove-row" style="color:#b32d2e;">&#x2715; <?php echo esc_js(__('Remove', 'art-studio')); ?></button></td>' +
             '</tr>');
         }
 
@@ -1300,7 +1441,7 @@ function art_studio_form_settings_page()
                 }
             });
 
-            $status.text('<?php esc_js(__('Saving…', 'art-studio')); ?>').css('color', '#666');
+            $status.text('<?php echo esc_js(__('Saving\u2026', 'art-studio')); ?>').css('color', '#666');
 
             $.post(config.ajaxUrl, {
                 action:   'art_studio_save_form_map',
@@ -1310,12 +1451,199 @@ function art_studio_form_settings_page()
                 if (response.success) {
                     $status.text(response.data).css('color', 'green');
                 } else {
-                    $status.text(response.data || '<?php esc_js(__('Error saving.', 'art-studio')); ?>').css('color', 'red');
+                    $status.text(response.data || '<?php echo esc_js(__('Error saving.', 'art-studio')); ?>').css('color', 'red');
                 }
             }).fail(function() {
-                $status.text('<?php esc_js(__('Server error.', 'art-studio')); ?>').css('color', 'red');
+                $status.text('<?php echo esc_js(__('Server error.', 'art-studio')); ?>').css('color', 'red');
             });
         });
+
+        // =====================================================
+        // SECTION B: Field Mapper
+        // =====================================================
+
+        var destTypeOptions =
+            '<option value="ignore"><?php echo esc_js(__('Ignore', 'art-studio')); ?></option>' +
+            '<option value="post_title"><?php echo esc_js(__('Post Title', 'art-studio')); ?></option>' +
+            '<option value="post_content"><?php echo esc_js(__('Post Content', 'art-studio')); ?></option>' +
+            '<option value="meta"><?php echo esc_js(__('Meta (custom key)', 'art-studio')); ?></option>' +
+            '<option value="taxonomy"><?php echo esc_js(__('Taxonomy', 'art-studio')); ?></option>' +
+            '<option value="featured_image"><?php echo esc_js(__('Featured Image', 'art-studio')); ?></option>' +
+            '<option value="name_concat"><?php echo esc_js(__('Concatenated Name (first + last)', 'art-studio')); ?></option>';
+
+        // Build taxonomy dropdown HTML
+        var taxOptions = '<option value=""><?php echo esc_js(__('\u2014 Select Taxonomy \u2014', 'art-studio')); ?></option>';
+        $.each(config.taxonomies, function(i, tax) {
+            taxOptions += '<option value="' + escAttr(tax.slug) + '">' + tax.label + '</option>';
+        });
+
+        function escAttr(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        /**
+         * Build the Destination cell content based on destination type.
+         */
+        function buildDestCell(destType, savedKey) {
+            var $td = $('<td style="padding:8px 12px;">');
+            switch (destType) {
+                case 'meta':
+                case 'name_concat':
+                    $td.append(
+                        $('<input type="text" class="dest-key-input" style="width:100%;max-width:220px;" />')
+                            .attr('placeholder', '<?php echo esc_js(__('e.g. _artist_name', 'art-studio')); ?>')
+                            .val(savedKey || '')
+                    );
+                    break;
+                case 'taxonomy':
+                    var $sel = $('<select class="dest-key-select" style="width:100%;max-width:220px;">' + taxOptions + '</select>');
+                    if (savedKey) { $sel.val(savedKey); }
+                    $td.append($sel);
+                    break;
+                default:
+                    $td.html('<span style="color:#999;">n/a</span>');
+                    break;
+            }
+            return $td;
+        }
+
+        /**
+         * Build a single field-map table row.
+         */
+        function buildFieldRow(field, savedMapping) {
+            var destType = savedMapping ? savedMapping.destination_type : 'ignore';
+            var destKey  = savedMapping ? savedMapping.destination_key  : '';
+
+            // Auto-suggest sensible defaults on first load
+            if (!savedMapping) {
+                if (field.type === 'name') {
+                    destType = 'name_concat';
+                    destKey  = '_' + field.element_id.replace(/-/g, '_');
+                } else if (field.type === 'upload') {
+                    destType = 'featured_image';
+                }
+            }
+
+            // Pre-fill meta key suggestion from field ID if not already set
+            if ((destType === 'meta' || destType === 'name_concat') && !destKey) {
+                destKey = '_' + field.element_id.replace(/-/g, '_');
+            }
+
+            var $destTypeSel = $('<select class="dest-type-select" style="width:100%;max-width:200px;">' + destTypeOptions + '</select>').val(destType);
+            var $tr = $('<tr class="field-map-row">').attr('data-element-id', field.element_id);
+
+            $tr.append($('<td style="padding:8px 12px;">').text(field.label || field.element_id));
+            $tr.append($('<td style="padding:8px 12px;font-family:monospace;font-size:12px;color:#666;">').text(field.element_id));
+            $tr.append($('<td style="padding:8px 12px;">').append($destTypeSel));
+            $tr.append(buildDestCell(destType, destKey));
+
+            return $tr;
+        }
+
+        // Re-render destination cell when "Maps To" changes
+        $(document).on('change', '.dest-type-select', function() {
+            var $row     = $(this).closest('tr');
+            var destType = $(this).val();
+            var fieldId  = $row.data('element-id') || '';
+            var suggest  = '_' + String(fieldId).replace(/-/g, '_');
+            $row.find('td').eq(3).replaceWith(buildDestCell(destType, suggest));
+        });
+
+        // "Load Fields" button
+        $('#art-studio-load-fields').on('click', function() {
+            var formId = $('#art-studio-field-map-form-select').val();
+            if (!formId) {
+                alert('<?php echo esc_js(__('Please select a form first.', 'art-studio')); ?>');
+                return;
+            }
+
+            var $btn        = $(this).prop('disabled', true).text('<?php echo esc_js(__('Loading\u2026', 'art-studio')); ?>');
+            var $loadStatus = $('#art-studio-load-status').text('').css('color', '');
+
+            $.post(config.ajaxUrl, {
+                action:  'art_studio_get_form_fields',
+                nonce:   config.fieldMapNonce,
+                form_id: formId
+            }, function(response) {
+                $btn.prop('disabled', false).text('<?php echo esc_js(__('Load Fields', 'art-studio')); ?>');
+
+                if (!response.success) {
+                    $loadStatus.text(response.data || '<?php echo esc_js(__('Error loading fields.', 'art-studio')); ?>').css('color', 'red');
+                    return;
+                }
+
+                var fields    = response.data;
+                var savedMaps = config.existingMaps[String(formId)] || config.existingMaps[parseInt(formId)] || {};
+                var $tbody    = $('#art-studio-field-map-rows').empty();
+
+                if (!fields.length) {
+                    $loadStatus.text('<?php echo esc_js(__('No mappable fields found in this form.', 'art-studio')); ?>').css('color', '#666');
+                    return;
+                }
+
+                $.each(fields, function(i, field) {
+                    $tbody.append(buildFieldRow(field, savedMaps[field.element_id] || null));
+                });
+
+                $('#art-studio-field-map-container').show();
+                $loadStatus.text('').css('color', '');
+            }).fail(function() {
+                $btn.prop('disabled', false).text('<?php echo esc_js(__('Load Fields', 'art-studio')); ?>');
+                $loadStatus.text('<?php echo esc_js(__('Server error. Check that WordPress AJAX is reachable.', 'art-studio')); ?>').css('color', 'red');
+            });
+        });
+
+        // "Save Field Mappings" button
+        $('#art-studio-save-field-map').on('click', function() {
+            var formId  = $('#art-studio-field-map-form-select').val();
+            var $status = $('#art-studio-field-map-status');
+
+            if (!formId) {
+                $status.text('<?php echo esc_js(__('No form selected.', 'art-studio')); ?>').css('color', 'red');
+                return;
+            }
+
+            var mappings = [];
+            $('#art-studio-field-map-rows .field-map-row').each(function() {
+                var elementId = $(this).data('element-id');
+                var destType  = $(this).find('.dest-type-select').val();
+                var destKey   = '';
+
+                var $keyInput  = $(this).find('.dest-key-input');
+                var $keySelect = $(this).find('.dest-key-select');
+                if ($keyInput.length)  { destKey = $keyInput.val().trim(); }
+                else if ($keySelect.length) { destKey = $keySelect.val() || ''; }
+
+                mappings.push({ element_id: elementId, destination_type: destType, destination_key: destKey });
+            });
+
+            $status.text('<?php echo esc_js(__('Saving\u2026', 'art-studio')); ?>').css('color', '#666');
+
+            $.post(config.ajaxUrl, {
+                action:    'art_studio_save_field_map',
+                nonce:     config.fieldMapNonce,
+                form_id:   formId,
+                field_map: JSON.stringify(mappings)
+            }, function(response) {
+                if (response.success) {
+                    // Update in-memory cache so re-loading the page pre-fills correctly
+                    if (!config.existingMaps[formId]) { config.existingMaps[formId] = {}; }
+                    $.each(mappings, function(i, m) {
+                        config.existingMaps[formId][m.element_id] = {
+                            destination_type: m.destination_type,
+                            destination_key:  m.destination_key
+                        };
+                    });
+                    $status.text(response.data).css('color', 'green');
+                } else {
+                    $status.text(response.data || '<?php echo esc_js(__('Error saving.', 'art-studio')); ?>').css('color', 'red');
+                }
+            }).fail(function() {
+                $status.text('<?php echo esc_js(__('Server error.', 'art-studio')); ?>').css('color', 'red');
+            });
+        });
+
     })(jQuery);
     </script>
     <?php

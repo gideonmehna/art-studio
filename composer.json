@@ -1,0 +1,16 @@
+{
+    "name": "art-studio/art-studio",
+    "description": "Art Studio WordPress plugin",
+    "require": {
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.5"
+    },
+    "scripts": {
+        "test": "phpunit"
+    },
+    "config": {
+        "allow-plugins": false
+    }
+}
