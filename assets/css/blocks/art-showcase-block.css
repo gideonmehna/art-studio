@@ -49,11 +49,12 @@
 
 .art-showcase-item {
     flex: 0 0 260px;
-    background: #ffed4e;
+    background: #ffffff;
     border-radius: 15px;
     padding: 15px;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
 }
 
 .art-showcase-item:hover {
